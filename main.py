@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from routers import file_management
+from router import file_management
 
 
 app = FastAPI(

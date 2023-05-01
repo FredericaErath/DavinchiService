@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from typing import Union
 
-from base import surgery
+from core.database.base import surgery
 
 log = logging.getLogger(__name__)
 department_dict = {"肝脾外科": "hepa", "胃肠外科": "gastro",

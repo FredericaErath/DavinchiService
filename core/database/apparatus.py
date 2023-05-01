@@ -5,7 +5,7 @@ import logging
 from typing import Union
 from datetime import datetime
 
-from base import apparatus
+from core.database.base import apparatus
 
 log = logging.getLogger(__name__)
 
@@ -139,11 +139,12 @@ def update_instrument(v_times: int,
     """
     if v_times > 12 or v_times < -1:
         log.error("Value error, using times of a certain instrument should be in [-1, 12]")
+        return "unsuccessful"
     else:
-        new_value = {"$set": {"times": v_times, "insert_time": datetime.now()}}
+        new_value = {"$set": {"times": v_times}}
         f = get_filter(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times)
         try:
-            apparatus.update_one(f, new_value)
+            apparatus.update_many(f, new_value)
             return "successful"
         except Exception as e:
             log.error(f"mongodb delete operation in apparatus collection failed and raise the following exception: {e}")

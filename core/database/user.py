@@ -5,7 +5,7 @@ import logging
 import base64
 from typing import Union
 
-from base import user
+from core.database.base import user
 
 log = logging.getLogger(__name__)
 user_dict = {"医生": 1, "护士": 2, "管理员": 0}
@@ -120,7 +120,7 @@ def update_user(key: str,
     new_value = {"$set": {key: value}}
     f = get_filter(u_id=u_id, name=name, user_type=user_type)
     try:
-        user.update_one(f, new_value)
+        user.update_many(f, new_value)
         return "successful"
     except Exception as e:
         log.error(f"mongodb delete operation in user collection failed and raise the following exception: {e}")
