@@ -79,9 +79,8 @@ def check_consumable_stock(ls_c_name: list) -> list:
     return df[df["num"] != df["description"]]["c_name"].to_list()
 
 
-def _update_and_get_supply(x, ls_c_id):
+def _update_and_get_supply(x):
     c_id = get_newest_supply(n_limit=1, c_name=x["c_name"])[0]["c_id"]
-    ls_c_id += [c_id]
     update_supply(c_id=c_id, description=x["description"])
     return get_supply(c_id=c_id)[0]
 
@@ -117,9 +116,8 @@ def insert_surgery_info(ls_c_name: list,
     :param part: part of the surgery operate on
     :return: message of whether successfully inserted
     """
-    ls_c_id = []
     instruments = list(map(lambda x: update_instrument_times_info(x)["instrument"], ls_i_id))
-    consumables = list(map(lambda x: _update_and_get_supply(x, ls_c_id), ls_c_name))
+    consumables = list(map(lambda x: _update_and_get_supply(x), ls_c_name))
     return insert_surgery(p_name=p_name, admission_number=admission_number, department=department, s_name=s_name,
                           chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
                           instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse, begin_time=begin_time,
