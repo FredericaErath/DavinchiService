@@ -8,13 +8,16 @@ from typing import Union
 from core.database.base import surgery
 
 log = logging.getLogger(__name__)
-department_dict = {"肝脾外科": "hepa", "胃肠外科": "gastro",
+DC_DEPARTMENT = {"肝脾外科": "hepa", "胃肠外科": "gastro",
                    "泌尿外科": "urologic", "胆胰外科": "pancreatic",
                    "胸外科": "chest", "妇科": "gynae", "心脏外科": "cardiac"}
+LS_PART = {"机器人援助下肺病损切除", "机器人援助下半肝切除术", "机器人援助下肾部分切除术", "机器人援助下肾根治性切除术",
+           "机器人援助下肾上腺肿瘤切除", "机器人援助下肾切开取石术", "机器人援助下输尿管膀胱吻合术", "机器人援助下输尿管狭窄段切除吻合术"}
 
 
 def get_filter(begin_time: datetime = None,
                end_time: datetime = None,
+               part: Union[str, list[str]] = None,
                p_name: Union[str, list[str]] = None,
                admission_number: Union[int, list[int]] = None,
                department: Union[str, list[str]] = None,
@@ -28,6 +31,7 @@ def get_filter(begin_time: datetime = None,
 
     :param begin_time: begin time
     :param end_time: end time
+    :param part: part of the surgery operate on
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon
@@ -43,6 +47,8 @@ def get_filter(begin_time: datetime = None,
         f["date"] = {"$gte": begin_time}
     if end_time is not None:
         f["date"] = {"$lt": end_time}
+    if part is not None:
+        f["part"] = part
     if p_name is not None:
         if isinstance(p_name, int):
             f["p_name"] = p_name
@@ -59,9 +65,9 @@ def get_filter(begin_time: datetime = None,
             log.error("admission_number should be either int or list")
     if department is not None:
         if isinstance(department, str):
-            f["department"] = department_dict.get(department)
+            f["department"] = DC_DEPARTMENT.get(department)
         elif isinstance(department, list):
-            f["department"] = {"$in": list(map(lambda x: department_dict.get(x), department))}
+            f["department"] = {"$in": list(map(lambda x: DC_DEPARTMENT.get(x), department))}
         else:
             log.error("department should be either str or list")
     if s_name is not None:
@@ -104,6 +110,7 @@ def get_filter(begin_time: datetime = None,
 
 def get_surgery(begin_time: datetime = None,
                 end_time: datetime = None,
+                part: Union[str, list[str]] = None,
                 p_name: Union[str, list[str]] = None,
                 admission_number: Union[int, list[int]] = None,
                 department: Union[str, list[str]] = None,
@@ -117,6 +124,7 @@ def get_surgery(begin_time: datetime = None,
 
     :param begin_time: begin time
     :param end_time: end time
+    :param part: part of the surgery operate on
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon
@@ -127,7 +135,7 @@ def get_surgery(begin_time: datetime = None,
     :param circulating_nurse: circulating nurse
     :return: message of whether successfully inserted
     """
-    f = get_filter(p_name=p_name, admission_number=admission_number, department=department, s_name=s_name,
+    f = get_filter(p_name=p_name, admission_number=admission_number, part=part, department=department, s_name=s_name,
                    chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon, instrument_nurse=instrument_nurse,
                    circulating_nurse=circulating_nurse, begin_time=begin_time, end_time=end_time)
     return list(surgery.find(f, {"_id": 0}))
@@ -144,7 +152,8 @@ def insert_surgery(p_name: str,
                    begin_time: datetime,
                    end_time: datetime,
                    instruments: list[dict],
-                   consumables: list[dict]):
+                   consumables: list[dict],
+                   part: str = None):
     """
     Add one doc in surgery document.
 
@@ -160,12 +169,15 @@ def insert_surgery(p_name: str,
     :param end_time: surgery's end time
     :param instruments: instruments
     :param consumables: consumables
+    :param part: part of the surgery operate on
     :return: message of whether successfully inserted
     """
     try:
+        if s_name not in LS_PART:
+            part = ""
         insert_doc = dict(p_name=p_name, date=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
-                          admission_number=admission_number, department=department_dict.get(department), s_name=s_name,
-                          chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
+                          admission_number=admission_number, department=DC_DEPARTMENT.get(department), s_name=s_name,
+                          chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon, part=part,
                           instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse, begin_time=begin_time,
                           end_time=end_time, instruments=instruments, consumables=consumables)
         surgery.insert_one(insert_doc)
@@ -177,6 +189,7 @@ def insert_surgery(p_name: str,
 
 def delete_surgery(begin_time: datetime = None,
                    end_time: datetime = None,
+                   part: Union[str, list[str]] = None,
                    department: Union[str, list[str]] = None,
                    s_name: Union[str, list[str]] = None,
                    chief_surgeon: Union[str, list[str]] = None,
@@ -188,6 +201,7 @@ def delete_surgery(begin_time: datetime = None,
 
         :param department: department of chief surgeon
         :param s_name: surgery name
+        :param part: part of the surgery operate on
         :param chief_surgeon: chief surgeon
         :param associate_surgeon: associate surgeon
         :param instrument_nurse: instrument nurse
@@ -196,7 +210,7 @@ def delete_surgery(begin_time: datetime = None,
         :param end_time: surgery's end time
         :return: message of whether successfully deleted
         """
-    f = get_filter(department=department, s_name=s_name, chief_surgeon=chief_surgeon,
+    f = get_filter(department=department, s_name=s_name, part=part, chief_surgeon=chief_surgeon,
                    associate_surgeon=associate_surgeon, instrument_nurse=instrument_nurse,
                    circulating_nurse=circulating_nurse, begin_time=begin_time, end_time=end_time)
     try:

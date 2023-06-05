@@ -74,7 +74,8 @@ def get_supply(begin_time: datetime = None,
 
 
 def get_newest_supply(n_limit: int, c_name: str):
-    return list(supplies.find({"description": "", "c_name": c_name}).sort([('c_id', -1)]).limit(n_limit))
+    res = list(supplies.find({"description": "", "c_name": c_name}, {"_id": 0}).sort([('c_id', -1)]).limit(n_limit))
+    return res
 
 
 def insert_supply(c_name: str,
