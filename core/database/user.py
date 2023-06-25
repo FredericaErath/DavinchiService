@@ -72,7 +72,6 @@ def insert_user(u_id: str, name: str, user_type: str, code: str):
     :param code: user's code
     :return: message of whether successfully inserted
     """
-    code = str(base64.b64encode(code.encode('utf-8')))[2:-1]
     insert_doc = dict(u_id=u_id, name=name, user_type=user_dict.get(user_type), code=code)
     try:
         user.insert_one(insert_doc)
