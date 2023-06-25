@@ -1,8 +1,10 @@
 """
 Authority handler. Use jwt verification.
 """
+from typing import Optional
+
 from jose import jwt
-from fastapi import HTTPException, Security
+from fastapi import HTTPException, Security, Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -28,7 +30,7 @@ class AuthHandler:
         }
         return jwt.encode(payload, self.secret, algorithm='HS256')
 
-    def decode_token(self, token):
+    def decode_token(self, token: Optional[str] = Header("")):
         try:
             payload = jwt.decode(token, self.secret, algorithms='HS256')
             return payload['sub']

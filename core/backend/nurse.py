@@ -41,18 +41,18 @@ def get_consumable_ls(instruments: list) -> list:
     :return: list of consumables
     """
     ls_consumables = ["密封件", "无菌壁套", "中心柱无菌套"]
-    if "电剪" in list(map(lambda x: x["i_name"], instruments)):
+    if "电剪" in instruments:
         ls_consumables += ["尖端盖附件"]
     return ls_consumables
 
 
-def get_surgery_name():
+def get_surgery_names():
     """
     Get surgery list.
 
     :return: list of surgeries
     """
-    dc_surgery_instrument = json.load(open('../data/surgery_to_instruments.json', encoding='utf-8'))
+    dc_surgery_instrument = json.load(open('F:/DavinciService/core/data/surgery_to_instruments.json', encoding='utf-8'))
     return list(dc_surgery_instrument.keys())
 
 
@@ -63,20 +63,21 @@ def get_instrument_ls(s_name: str) -> list:
     :param s_name: surgery name
     :return: list of instruments
     """
-    dc_surgery_instrument = json.load(open('../data/surgery_to_instruments.json', encoding='utf-8'))
+    dc_surgery_instrument = json.load(open('F:/DavinciService/core/data/surgery_to_instruments.json', encoding='utf-8'))
     return dc_surgery_instrument[s_name]
 
 
-def check_consumable_stock(ls_c_name: list) -> list:
+def get_consumable_stock(instruments: list) -> list:
     """
     Check if stock has enough consumables for input.
 
-    :param ls_c_name: list of {c_name: "无菌壁套", description: "默认"}
+    :param instruments: list of instruments
     :return: list of consumables that do not match
     """
-    df = pd.DataFrame(ls_c_name).groupby("c_name").count().reset_index()
-    df["num"] = df.apply(lambda x: len(get_newest_supply(c_name=x["c_name"], n_limit=x["description"])), axis=1)
-    return df[df["num"] != df["description"]]["c_name"].to_list()
+    ls_c_name = get_supply(c_name=get_consumable_ls(instruments=instruments))
+    df = pd.DataFrame(ls_c_name)
+    df = df[df["description"] == ""].groupby('c_name').count().reset_index().rename(columns={"c_id": "nums"})
+    return df[["c_name", "nums"]].to_dict('records')
 
 
 def _update_and_get_supply(x):

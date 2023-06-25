@@ -2,7 +2,6 @@
 CURD functions for user document
 """
 import logging
-import base64
 from typing import Union
 
 from core.database.base import user
