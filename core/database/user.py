@@ -80,6 +80,21 @@ def insert_user(u_id: str, name: str, user_type: str, code: str):
         return "unsuccessful"
 
 
+def insert_users(users: list):
+    """
+    Insert a specific user, user's code should be encrypted.
+
+    :param users: dict of users, should be {"u_id": "18851438132", "name": "子淇", "user_type": 0, "code": "16s54vhd"}
+    :return: message of whether successfully inserted
+    """
+    try:
+        user.insert_many(users)
+        return "successful"
+    except Exception as e:
+        log.error(f"mongodb insert operation in user collection failed and raise the following exception: {e}")
+        return "unsuccessful"
+
+
 def delete_user(u_id: Union[str, list[str]] = None,
                 name: Union[str, list[str]] = None,
                 user_type: Union[str, list[str]] = None):
