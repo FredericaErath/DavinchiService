@@ -4,7 +4,7 @@ from core.backend.nurse import insert_surgery_info, get_instrument_ls, get_surge
 from core.backend.user import auth
 from model.nurse import Surgery
 
-router = APIRouter(prefix="nurse")
+router = APIRouter(prefix="/nurse")
 
 
 @router.get('/get_surgery_name', tags=['Nurse'], dependencies=[Depends(auth.decode_token)])

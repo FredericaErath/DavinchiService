@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from core.backend.doctor import general_statistics, surgery_by_type, surgery_by_time
 from core.backend.user import auth
 
-router = APIRouter(prefix="doctor")
+router = APIRouter(prefix="/doctor")
 
 
 @router.post('/general_statistics', tags=['Doctor'], dependencies=[Depends(auth.decode_token)])

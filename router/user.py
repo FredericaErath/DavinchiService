@@ -17,7 +17,7 @@ def register_api(user: User):
 
 @router.post('/revise', dependencies=[Depends(auth.decode_token)], tags=["User"])
 def revise_api(user: User):
-    return revise_user_info(user.u_id, user.pwd)
+    return revise_user_info(u_id=user.u_id, pwd=user.pwd, name=user.name, new_u_id=user.new_id)
 
 
 @router.get('/protected', dependencies=[Depends(auth.decode_token)], tags=["User"])

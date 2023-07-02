@@ -1,6 +1,8 @@
 """
 Generic functions for all users
 """
+from typing import Optional
+
 from fastapi import HTTPException
 from core.database import update_user, get_user, insert_user
 from core.backend.auth import AuthHandler
@@ -9,12 +11,16 @@ from core.backend.auth import AuthHandler
 auth = AuthHandler()
 
 
-def revise_user_info(pwd: str, u_id: str):
+def revise_user_info(u_id: str,
+                     pwd: str = None,
+                     name: str = None,
+                     new_u_id: str = None):
     """
     Revise user info.
     """
-    code = auth.get_pwd_hash(pwd=pwd)
-    res = update_user(key="code", value=code, u_id=u_id)
+    if pwd is not None:
+        pwd = auth.get_pwd_hash(pwd=pwd)
+    res = update_user(u_id=u_id, pwd=pwd, name=name, new_id=new_u_id)
     if res == "unsuccessful":
         raise HTTPException(status_code=400, detail="Update failure, please check your info.")
     else:

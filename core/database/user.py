@@ -3,11 +3,12 @@ CURD functions for user document
 """
 import logging
 from typing import Union
+from datetime import datetime
 
 from core.database.base import user
 
 log = logging.getLogger(__name__)
-user_dict = {"医生": 1, "护士": 2, "管理员": 0}
+USER_DICT = {"医生": 1, "护士": 2, "管理员": 0}
 
 
 def get_filter(u_id: Union[str, list[str]] = None,
@@ -38,9 +39,9 @@ def get_filter(u_id: Union[str, list[str]] = None,
             log.error("name should be either str or list")
     if user_type is not None:
         if isinstance(user_type, str):
-            f["user_type"] = user_dict.get(user_type)
+            f["user_type"] = USER_DICT.get(user_type)
         elif isinstance(user_type, list):
-            f["user_type"] = {"$in": list(map(lambda x: user_dict.get(x), user_type))}
+            f["user_type"] = {"$in": list(map(lambda x: USER_DICT.get(x), user_type))}
         else:
             log.error("user_type should be either int or list")
     return f
@@ -71,7 +72,8 @@ def insert_user(u_id: str, name: str, user_type: str, code: str):
     :param code: user's code
     :return: message of whether successfully inserted
     """
-    insert_doc = dict(u_id=u_id, name=name, user_type=user_dict.get(user_type), code=code)
+    insert_doc = dict(u_id=u_id, name=name, user_type=USER_DICT.get(user_type), code=code,
+                      insert_datetime=datetime.utcnow())
     try:
         user.insert_one(insert_doc)
         return "successful"
@@ -115,27 +117,40 @@ def delete_user(u_id: Union[str, list[str]] = None,
         return "unsuccessful"
 
 
-def update_user(key: str,
-                value: any,
-                u_id: Union[str, list[str]] = None,
-                name: Union[str, list[str]] = None,
-                user_type: Union[str, list[str]] = None):
+def update_user(u_id: Union[str, list[str]] = None,
+                name: str = None,
+                user_type: str = None,
+                pwd: str = None,
+                new_id: str = None):
     """
     Update specific user. Only support update one user's info.
 
-    :param key: keys need to be updated
-    :param value: values need to be updated
     :param u_id: user's id
     :param name: user's name
     :param user_type: user type
+    :param pwd: user's password
+    :param new_id: new user's id, in case for changing phone number
     :return: message of whether successfully updated
     """
-    new_value = {"$set": {key: value}}
-    f = get_filter(u_id=u_id, name=name, user_type=user_type)
+    dc_set = {}
+    if name is not None:
+        dc_set["name"] = name
+    if user_type is not None:
+        dc_set["user_type"] = USER_DICT.get(user_type)
+    if pwd is not None:
+        dc_set["code"] = pwd
+    if new_id is not None:
+        if isinstance(u_id, list):
+            log.error(f"User's id should be unique")
+            return "unsuccessful"
+        else:
+            dc_set["u_id"] = new_id
+    new_value = {"$set": dc_set}
+    print(new_value)
+    f = get_filter(u_id=u_id)
     try:
         user.update_many(f, new_value)
         return "successful"
     except Exception as e:
         log.error(f"mongodb delete operation in user collection failed and raise the following exception: {e}")
         return "unsuccessful"
-
