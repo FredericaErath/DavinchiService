@@ -5,10 +5,10 @@ import logging
 from typing import Union
 from datetime import datetime
 
+from constant import USER_DICT
 from core.database.base import user
 
 log = logging.getLogger(__name__)
-USER_DICT = {"医生": 1, "护士": 2, "管理员": 0}
 
 
 def get_filter(u_id: Union[str, list[str]] = None,

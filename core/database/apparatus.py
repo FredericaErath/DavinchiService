@@ -4,8 +4,8 @@ CURD functions for apparatus document
 import logging
 from typing import Union
 from datetime import datetime
-
 from core.database.base import apparatus
+from core.utils import generate_qrcode_pic
 
 log = logging.getLogger(__name__)
 
@@ -73,8 +73,8 @@ def get_instrument(begin_time: datetime = None,
     return list(apparatus.find(f, {"_id": 0}))
 
 
-def insert_instrument(i_name: str,
-                      times: int = 12):
+def insert_instrument(i_name: Union[list[str], str],
+                      times: Union[list[str], str] = None):
     """
     Insert a specific instrument.
 
@@ -82,18 +82,51 @@ def insert_instrument(i_name: str,
     :param times: times the instrument used, default is 12
     :return: message of whether successfully inserted
     """
-    i_id = list(apparatus.find().sort([('i_id', -1)]).limit(1))
-    if len(i_id) == 0:
-        i_id = 0
+    last_i_id = list(apparatus.find().sort([('i_id', -1)]).limit(1))
+    # get last instrument id
+    if len(last_i_id) == 0:
+        begin_i_id = 0
     else:
-        i_id = i_id[0]["i_id"] + 1
-    insert_doc = dict(i_id=i_id, i_name=i_name, times=times, insert_time=datetime.now())
+        begin_i_id = last_i_id[0]["i_id"] + 1
+
+    file_path = []
+    # get docs to be inserted
     try:
-        apparatus.insert_one(insert_doc)
-        return "successful"
+        if isinstance(i_name, str):
+            if times is None:
+                times = 12
+            file_path += [generate_qrcode_pic(str(begin_i_id))]
+            insert_doc = [dict(i_id=begin_i_id, i_name=i_name, times=times,
+                               qr_code=open(file_path[0], 'rb').read(),
+                               insert_time=datetime.now())]
+        elif isinstance(i_name, list):
+            if times is None:
+                times = [12] * len(i_name)
+
+            def _get_insert_doc(x, file_paths):
+                index = i_name.index(x)
+                file = generate_qrcode_pic(str(begin_i_id + index))
+                file_paths.append(file)
+                doc = dict(i_id=begin_i_id + index, i_name=x, times=times[index],
+                           qr_code=open(file, 'rb').read(),
+                           insert_time=datetime.now())
+                return doc
+
+            insert_doc = list(map(lambda x: _get_insert_doc(x, file_path), i_name))
+        else:
+            log.error(f"Value error, instrument should be either string or list of string")
+            return {"msg": "unsuccessful"}
+    except Exception as e:
+        log.error(f"Something went wrong when generating qr_codes: {e}")
+        return {"msg": "unsuccessful"}
+    try:
+        apparatus.insert_many(insert_doc)
+        # pack images
+
+        return {"msg": "successful", "files": file_path}
     except Exception as e:
         log.error(f"mongodb insert operation in apparatus collection failed and raise the following exception: {e}")
-        return "unsuccessful"
+        return {"msg": "unsuccessful"}
 
 
 def delete_instrument(begin_time: datetime = None,

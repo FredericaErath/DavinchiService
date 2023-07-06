@@ -5,14 +5,10 @@ from datetime import datetime
 import logging
 from typing import Union
 
+from constant import DC_DEPARTMENT, LS_PART
 from core.database.base import surgery
 
 log = logging.getLogger(__name__)
-DC_DEPARTMENT = {"肝脾外科": "hepa", "胃肠外科": "gastro",
-                   "泌尿外科": "urologic", "胆胰外科": "pancreatic",
-                   "胸外科": "chest", "妇科": "gynae", "心脏外科": "cardiac"}
-LS_PART = {"机器人援助下肺病损切除", "机器人援助下半肝切除术", "机器人援助下肾部分切除术", "机器人援助下肾根治性切除术",
-           "机器人援助下肾上腺肿瘤切除", "机器人援助下肾切开取石术", "机器人援助下输尿管膀胱吻合术", "机器人援助下输尿管狭窄段切除吻合术"}
 
 
 def get_filter(begin_time: datetime = None,

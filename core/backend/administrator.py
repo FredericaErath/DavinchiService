@@ -5,12 +5,10 @@ from datetime import datetime
 from typing import Union
 
 import pandas as pd
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
 
+from constant import USER_DICT_REVERSE, USER_COLUMNS
 from core.database import get_user, delete_user, insert_users, USER_DICT
-
-USER_DICT_REVERSE = {1: "医生", 2: "护士", 0: "管理员"}
-COLUMNS = {"账号": "u_id", "用户名称": "name", "用户类型": "user_type", "密码": "code"}
 
 
 def get_all_users():
@@ -30,10 +28,9 @@ def delete_user_by_uid(u_id: Union[list, str]):
 
 
 def add_users_by_file(f_users: str):
-    # TODO: ensure the robustness, columns type, names
-    df = pd.read_excel(f_users).rename(columns=COLUMNS)
+    df = pd.read_excel(f_users).rename(columns=USER_COLUMNS)
     # check columns
-    if set(df.columns.tolist()) == set(COLUMNS.values()):
+    if set(df.columns.tolist()) == set(USER_COLUMNS.values()):
         df[['u_id', 'code']] = df[['u_id', 'code']].astype('str')
         df["user_type"] = df["user_type"].apply(lambda x: USER_DICT.get(x))
         df["insert_datetime"] = datetime.utcnow()

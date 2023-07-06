@@ -2,15 +2,16 @@
 Nurse end operations
 """
 import logging
+import os.path
 from datetime import datetime
 import json
 import pandas as pd
+
+from constant import BASE_CORE_DIR
 from core.database import get_instrument, update_instrument, insert_surgery, update_supply, get_supply, \
     get_newest_supply
 
 log = logging.getLogger(__name__)
-DC_INSTRUMENT_TO_SUPPLY = {"电剪": "尖端盖附件"}
-DC_SUPPLY_TO_NUMBER = {"无菌壁套": 4, "中心柱无菌套": 1, "尖端盖附件": 1}
 
 
 def update_instrument_times_info(i_id: int) -> dict:
@@ -63,7 +64,8 @@ def get_instrument_ls(s_name: str) -> list:
     :param s_name: surgery name
     :return: list of instruments
     """
-    dc_surgery_instrument = json.load(open('F:/DavinciService/core/data/surgery_to_instruments.json', encoding='utf-8'))
+    dc_surgery_instrument = json.load(open(os.path.join(BASE_CORE_DIR, 'data/surgery_to_instruments.json'),
+                                           encoding='utf-8'))
     return dc_surgery_instrument[s_name]
 
 
