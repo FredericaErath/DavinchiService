@@ -7,8 +7,9 @@ from starlette.background import BackgroundTasks
 
 from core.backend.administrator import get_all_users, delete_user_by_uid, add_users_by_file
 from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, add_one_instrument, \
-    download_instrument_qr_code
+    download_instrument_qr_code, delete_instruments_by_id
 from core.backend.user import register, revise_user_info
+from model.instrument import Instrument
 from model.user import User
 
 router = APIRouter(prefix="/admin")
@@ -21,7 +22,6 @@ def add_user(user: User):
 
 @router.post('/revise_user', tags=['Admin'])
 def revise_user(user: User):
-    print(user)
     return revise_user_info(u_id=user.u_id, pwd=user.pwd, name=user.name, new_u_id=user.new_id)
 
 
@@ -54,15 +54,16 @@ def get_instrument_api():
 
 
 @router.post("/revise_instruments", tags=['Admin'])
-def revise_instrument_api(i_id: int,
-                          times: int):
-    return revise_instrument(i_id=i_id, times=times)
+def revise_instrument_api(instrument: Instrument):
+    return revise_instrument(i_id=instrument.i_id, times=instrument.times)
 
 
 @router.post("/add_instrument", tags=['Admin'])
-async def add_instrument(i_name: str, times: int = None):
-    res = add_one_instrument(i_name=i_name, times=times)
-    return FileResponse(res)
+def add_instrument(instrument: Instrument):
+    res = add_one_instrument(i_name=instrument.i_name, times=instrument.times)
+    response = FileResponse(res["file"], filename=res["file_name"], headers={"Access-Control-Expose-Headers":
+                                                                                 "content-disposition"})
+    return response
 
 
 @router.post("/upload_instruments", tags=['Admin'])
@@ -78,7 +79,15 @@ async def upload_instruments(file: UploadFile):
     return FileResponse(res)
 
 
+@router.post("/delete_instruments", tags=['Admin'])
+def delete_instruments(instrument: Instrument):
+    res = delete_instruments_by_id(i_id=instrument.i_id)
+    return res
+
+
 @router.post("/download_instrument_qrcode", tags=['Admin'])
-async def download_qrcode(i_id: int):
-    res = download_instrument_qr_code(i_id=i_id)
-    return FileResponse(res)
+def download_qrcode(instrument: Instrument):
+    res = download_instrument_qr_code(i_id=instrument.i_id)
+    response = FileResponse(res, filename=f"{str(instrument.i_id)}.png", headers={"Access-Control-Expose-Headers":
+                                                                                  "content-disposition"})
+    return response

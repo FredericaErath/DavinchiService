@@ -1,4 +1,3 @@
-import base64
 import os.path
 from typing import Union
 import numpy as np
@@ -27,7 +26,11 @@ def revise_instrument(i_id: int,
     """
     Revise instrument times
     """
-    return update_instrument(i_id=i_id, v_times=times)
+    res = update_instrument(i_id=i_id, v_times=times)
+    if res == "unsuccessful":
+        raise HTTPException(status_code=500, detail="Something went wrong")
+    else:
+        return res
 
 
 def download_instrument_qr_code(i_id: int):
@@ -69,15 +72,23 @@ def add_instruments_by_file(f_instruments: str):
 
 
 def add_one_instrument(i_name: str, times: int = None):
+    """
+    Add one instrument into database.
+    """
     res = insert_instrument(i_name=i_name, times=times)
     if res["msg"] == "unsuccessful":
         raise HTTPException(status_code=400, detail="upload operation failed")
     else:
-        return res["files"][0]
+        return {"file": res["files"][0], "file_name": res["file_name"]}
 
 
 def delete_instruments_by_id(i_id: Union[int, list[int]]):
     """
     Delete one or many instruments by instrument id.
     """
-    return delete_instrument(i_id=i_id)
+    res = delete_instrument(i_id=i_id)
+    if res == "unsuccessful":
+        raise HTTPException(status_code=500, detail="Something went wrong")
+    else:
+        return res
+

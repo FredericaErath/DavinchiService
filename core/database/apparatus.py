@@ -104,15 +104,14 @@ def insert_instrument(i_name: Union[list[str], str],
                 times = [12] * len(i_name)
 
             def _get_insert_doc(x, file_paths):
-                index = i_name.index(x)
-                file = generate_qrcode_pic(str(begin_i_id + index))
+                file = generate_qrcode_pic(str(begin_i_id + x[0]))
                 file_paths.append(file)
-                doc = dict(i_id=begin_i_id + index, i_name=x, times=times[index],
+                doc = dict(i_id=begin_i_id + x[0], i_name=x[1], times=times[x[0]],
                            qr_code=open(file, 'rb').read(),
                            insert_time=datetime.now())
                 return doc
 
-            insert_doc = list(map(lambda x: _get_insert_doc(x, file_path), i_name))
+            insert_doc = list(map(lambda x: _get_insert_doc(x, file_path), enumerate(i_name)))
         else:
             log.error(f"Value error, instrument should be either string or list of string")
             return {"msg": "unsuccessful"}
@@ -121,9 +120,10 @@ def insert_instrument(i_name: Union[list[str], str],
         return {"msg": "unsuccessful"}
     try:
         apparatus.insert_many(insert_doc)
-        # pack images
-
-        return {"msg": "successful", "files": file_path}
+        if isinstance(i_name, str):
+            return {"msg": "successful", "files": file_path, "file_name": str(begin_i_id) + ".png"}
+        else:
+            return {"msg": "successful", "files": file_path, "file_name": "QRCODES.zip"}
     except Exception as e:
         log.error(f"mongodb insert operation in apparatus collection failed and raise the following exception: {e}")
         return {"msg": "unsuccessful"}

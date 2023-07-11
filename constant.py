@@ -6,7 +6,7 @@ import os.path
 BASE_DIR = 'F:/DavinciService/'
 BASE_CORE_DIR = os.path.join(BASE_DIR, 'core/')
 BASE_DATA_DIR = os.path.join(BASE_CORE_DIR, 'data/')
-BASE_DATA_TEMP_DIR = os.path.join(BASE_DATA_DIR, 'TEMP/')
+BASE_DATA_TEMP_DIR = os.path.join(BASE_DATA_DIR, 'temp/')
 USER_DICT_REVERSE = {1: "医生", 2: "护士", 0: "管理员"}
 USER_COLUMNS = {"账号": "u_id", "用户名称": "name", "用户类型": "user_type", "密码": "code"}
 INSTRUMENT_COLUMNS = {"器械名称": "i_name", "使用次数": "times"}

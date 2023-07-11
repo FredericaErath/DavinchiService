@@ -101,11 +101,11 @@ def insert_supply(c_name: str,
         return "unsuccessful"
 
 
-def delete_instrument(begin_time: datetime = None,
-                      end_time: datetime = None,
-                      c_id: Union[int, list[int]] = None,
-                      c_name: Union[str, list[str]] = None,
-                      description: Union[str, list[str]] = None):
+def delete_supply(begin_time: datetime = None,
+                  end_time: datetime = None,
+                  c_id: Union[int, list[int]] = None,
+                  c_name: Union[str, list[str]] = None,
+                  description: Union[str, list[str]] = None):
     """
     Delete specific supply.
 

@@ -34,12 +34,6 @@ def generate_qrcode_pic(i_id: str):
     """
     Helper function, generate a qr_code picture.
     """
-    qr = qrcode.QRCode(
-        version=None,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        border=4,
-        box_size=10
-    )
     img = qrcode.make(i_id, version=4, border=4, box_size=12)
     file_path = os.path.join(BASE_DATA_TEMP_DIR, f'{i_id}.png')
     img.save(file_path)
