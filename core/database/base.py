@@ -10,5 +10,3 @@ user = davinci_db.user
 apparatus = davinci_db.apparatus
 supplies = davinci_db.supplies
 
-print(davinci_db.command(
-    {'listCollections': 1, 'filter': {'name': 'surgery'}})["cursor"]["firstBatch"][0]["options"]["validator"]["$jsonSchema"]["properties"].keys())

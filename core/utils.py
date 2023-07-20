@@ -22,8 +22,7 @@ def pack_files(file_names: list):
     zip_name = f'files.zip'
     with zipfile.ZipFile(zip_name, 'w') as z:
         for filename in file_names:
-            file = re.findall(r'[1-9][0-9].png', filename)
-            print(file)
+            file = re.findall(r'[1-9]?[0-9].png', filename)
             z.write(os.path.join(BASE_DATA_TEMP_DIR, filename), file[0])
     log.info('{}压缩成功'.format(zip_name))
     z.close()

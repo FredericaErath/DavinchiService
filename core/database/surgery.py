@@ -82,16 +82,16 @@ def get_filter(begin_time: datetime = None,
             log.error("chief_surgeon should be either str or list")
     if associate_surgeon is not None:
         if isinstance(associate_surgeon, str):
-            f["associate_surgeon"] = associate_surgeon
+            f["associate_surgeon.id"] = associate_surgeon
         elif isinstance(associate_surgeon, list):
-            f["associate_surgeon"] = {"$in": associate_surgeon}
+            f["associate_surgeon.id"] = {"$in": associate_surgeon}
         else:
             log.error("associate_surgeon should be either str or list")
     if instrument_nurse is not None:
         if isinstance(instrument_nurse, str):
-            f["instrument_nurse"] = instrument_nurse
+            f["instrument_nurse.id"] = instrument_nurse
         elif isinstance(instrument_nurse, list):
-            f["instrument_nurse"] = {"$in": instrument_nurse}
+            f["instrument_nurse.id"] = {"$in": instrument_nurse}
         else:
             log.error("instrument_nurse should be either str or list")
     if circulating_nurse is not None:

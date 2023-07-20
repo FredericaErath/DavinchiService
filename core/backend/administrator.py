@@ -12,11 +12,14 @@ from core.database import get_user, delete_user, insert_users, USER_DICT
 
 
 def get_all_users():
-    ls_users = list(map(lambda x: {"user_type": USER_DICT_REVERSE.get(x["user_type"]),
-                                   "insert_datetime": x["insert_datetime"].strftime("%Y-%m-%d %H:%M:%S"),
-                                   "u_id": x["u_id"], "name": x["name"]},
-                        get_user()))
-    return ls_users
+    users = get_user()
+    if len(users) == 0:
+        return []
+    else:
+        ls_users = list(map(lambda x: {"user_type": USER_DICT_REVERSE.get(x["user_type"]),
+                                       "insert_datetime": x["insert_datetime"].strftime("%Y-%m-%d %H:%M:%S"),
+                                       "u_id": x["u_id"], "name": x["name"]}, users))
+        return ls_users
 
 
 def delete_user_by_uid(u_id: Union[list, str]):

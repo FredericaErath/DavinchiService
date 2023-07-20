@@ -14,11 +14,15 @@ def get_all_instrument():
     """
     Get all instruments.
     """
-    df = pd.DataFrame(get_instrument())[["i_id", "i_name", "times", "insert_time"]]
-    conditions = [(df['times'] <= 0), (df['times'] > 0)]
-    values = ['失效', '有效']
-    df["validity"] = np.select(conditions, values)
-    return df.to_dict('records')
+    instruments = get_instrument()
+    if len(instruments) == 0:
+        return []
+    else:
+        df = pd.DataFrame(instruments)[["i_id", "i_name", "times", "insert_time"]]
+        conditions = [(df['times'] <= 0), (df['times'] > 0)]
+        values = ['失效', '有效']
+        df["validity"] = np.select(conditions, values)
+        return df.to_dict('records')
 
 
 def revise_instrument(i_id: int,
