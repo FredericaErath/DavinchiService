@@ -43,7 +43,7 @@ def get_filter(u_id: Union[str, list[str]] = None,
         elif isinstance(user_type, list):
             f["user_type"] = {"$in": list(map(lambda x: USER_DICT.get(x), user_type))}
         else:
-            log.error("user_type should be either int or list")
+            log.error("user_type should be either str or list")
     return f
 
 
@@ -146,7 +146,6 @@ def update_user(u_id: Union[str, list[str]] = None,
         else:
             dc_set["u_id"] = new_id
     new_value = {"$set": dc_set}
-    print(new_value)
     f = get_filter(u_id=u_id)
     try:
         user.update_many(f, new_value)

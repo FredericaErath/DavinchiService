@@ -8,11 +8,13 @@ import pandas as pd
 from fastapi import HTTPException
 
 from constant import USER_DICT_REVERSE, USER_COLUMNS
-from core.database import get_user, delete_user, insert_users, USER_DICT
+from core.database import get_user, delete_user, insert_users, USER_DICT, get_surgery
 
 
-def get_all_users():
-    users = get_user()
+def get_users(u_id: Union[str, list[str]] = None,
+              name: Union[str, list[str]] = None,
+              user_type: Union[str, list[str]] = None):
+    users = get_user(u_id=u_id, name=name, user_type=user_type)
     if len(users) == 0:
         return []
     else:
@@ -41,30 +43,3 @@ def add_users_by_file(f_users: str):
     else:
         HTTPException(status_code=400, detail="Columns do not fit for restriction.")
 
-
-def revise_instruments():
-    pass
-
-
-def revise_consumables():
-    pass
-
-
-def delete_instruments():
-    pass
-
-
-def delete_consumables():
-    pass
-
-
-def add_instruments():
-    pass
-
-
-def add_consumables():
-    pass
-
-
-def get_surgery():
-    pass

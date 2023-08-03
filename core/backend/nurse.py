@@ -5,11 +5,14 @@ import logging
 import os.path
 from datetime import datetime
 import json
+from typing import Union
+
 import pandas as pd
+from fastapi import HTTPException
 
 from constant import BASE_CORE_DIR
 from core.database import get_instrument, update_instrument, insert_surgery, update_supply, get_supply, \
-    get_newest_supply
+    get_newest_supply, get_user
 
 log = logging.getLogger(__name__)
 
@@ -85,7 +88,7 @@ def get_consumable_stock(instruments: list) -> list:
 def _update_and_get_supply(x):
     c_id = get_newest_supply(n_limit=1, c_name=x["c_name"])[0]["c_id"]
     update_supply(c_id=c_id, description=x["description"])
-    return get_supply(c_id=c_id)[0]
+    return get_supply(c_id=c_id)[0]["c_id"]
 
 
 def insert_surgery_info(ls_c_name: list,
@@ -96,8 +99,8 @@ def insert_surgery_info(ls_c_name: list,
                         s_name: str,
                         chief_surgeon: str,
                         associate_surgeon: str,
-                        instrument_nurse: str,
-                        circulating_nurse: str,
+                        instrument_nurse: Union[list[str], str],
+                        circulating_nurse: Union[list[str], str],
                         begin_time: datetime,
                         end_time: datetime,
                         part: str = None):
@@ -119,8 +122,21 @@ def insert_surgery_info(ls_c_name: list,
     :param part: part of the surgery operate on
     :return: message of whether successfully inserted
     """
-    instruments = list(map(lambda x: update_instrument_times_info(x)["instrument"], ls_i_id))
-    consumables = list(map(lambda x: _update_and_get_supply(x), ls_c_name))
+    try:
+        instruments = list(map(lambda x: update_instrument_times_info(x)["instrument"]["i_id"], ls_i_id))
+        consumables = list(map(lambda x: _update_and_get_supply(x), ls_c_name))
+        chief_surgeon = get_user(name=chief_surgeon)["u_id"]
+        associate_surgeon = get_user(name=associate_surgeon)["u_id"]
+        if isinstance(instrument_nurse, str):
+            instrument_nurse = [get_user(name=instrument_nurse)["u_id"]]
+        else:
+            instrument_nurse = list(map(lambda x: get_user(name=x)["u_id"], instrument_nurse))
+        if isinstance(circulating_nurse, str):
+            circulating_nurse = [get_user(name=circulating_nurse)["u_id"]]
+        else:
+            circulating_nurse = list(map(lambda x: get_user(name=x)["u_id"], circulating_nurse))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Input parameters have errors, and raise {e}")
     return insert_surgery(p_name=p_name, admission_number=admission_number, department=department, s_name=s_name,
                           chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
                           instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse, begin_time=begin_time,

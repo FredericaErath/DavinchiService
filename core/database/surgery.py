@@ -11,7 +11,8 @@ from core.database.base import surgery
 log = logging.getLogger(__name__)
 
 
-def get_filter(begin_time: datetime = None,
+def get_filter(s_id: int = None,
+               begin_time: datetime = None,
                end_time: datetime = None,
                part: Union[str, list[str]] = None,
                p_name: Union[str, list[str]] = None,
@@ -25,6 +26,7 @@ def get_filter(begin_time: datetime = None,
     """
     Get specific surgery filter.
 
+    :param s_id: surgery id
     :param begin_time: begin time
     :param end_time: end time
     :param part: part of the surgery operate on
@@ -39,6 +41,8 @@ def get_filter(begin_time: datetime = None,
     :return: filter
     """
     f = {}
+    if s_id is not None:
+        f["s_id"] = s_id
     if begin_time is not None:
         f["date"] = {"$gte": begin_time}
     if end_time is not None:
@@ -104,7 +108,8 @@ def get_filter(begin_time: datetime = None,
     return f
 
 
-def get_surgery(begin_time: datetime = None,
+def get_surgery(s_id: int = None,
+                begin_time: datetime = None,
                 end_time: datetime = None,
                 part: Union[str, list[str]] = None,
                 p_name: Union[str, list[str]] = None,
@@ -118,6 +123,7 @@ def get_surgery(begin_time: datetime = None,
     """
     Get specific surgery filter.
 
+    :param s_id: surgery id
     :param begin_time: begin time
     :param end_time: end time
     :param part: part of the surgery operate on
@@ -131,7 +137,8 @@ def get_surgery(begin_time: datetime = None,
     :param circulating_nurse: circulating nurse
     :return: message of whether successfully inserted
     """
-    f = get_filter(p_name=p_name, admission_number=admission_number, part=part, department=department, s_name=s_name,
+    f = get_filter(s_id=s_id, p_name=p_name, admission_number=admission_number, part=part, department=department,
+                   s_name=s_name,
                    chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon, instrument_nurse=instrument_nurse,
                    circulating_nurse=circulating_nurse, begin_time=begin_time, end_time=end_time)
     return list(surgery.find(f, {"_id": 0}))
@@ -143,12 +150,12 @@ def insert_surgery(p_name: str,
                    s_name: str,
                    chief_surgeon: str,
                    associate_surgeon: str,
-                   instrument_nurse: str,
-                   circulating_nurse: str,
+                   instrument_nurse: list[str],
+                   circulating_nurse: list[str],
                    begin_time: datetime,
                    end_time: datetime,
-                   instruments: list[dict],
-                   consumables: list[dict],
+                   instruments: list[int],
+                   consumables: list[int],
                    part: str = None):
     """
     Add one doc in surgery document.
@@ -168,10 +175,17 @@ def insert_surgery(p_name: str,
     :param part: part of the surgery operate on
     :return: message of whether successfully inserted
     """
+    s_id = list(surgery.find().sort([('s_id', -1)]).limit(1))
+    if len(s_id) == 0:
+        s_id = 0
+    else:
+        s_id = s_id[0]["s_id"] + 1
+
     try:
         if s_name not in LS_PART:
             part = ""
-        insert_doc = dict(p_name=p_name, date=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
+        insert_doc = dict(s_id=s_id, p_name=p_name,
+                          date=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
                           admission_number=admission_number, department=DC_DEPARTMENT.get(department), s_name=s_name,
                           chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon, part=part,
                           instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse, begin_time=begin_time,
@@ -183,7 +197,8 @@ def insert_surgery(p_name: str,
         return "unsuccessful"
 
 
-def delete_surgery(begin_time: datetime = None,
+def delete_surgery(s_id: int = None,
+                   begin_time: datetime = None,
                    end_time: datetime = None,
                    part: Union[str, list[str]] = None,
                    department: Union[str, list[str]] = None,
@@ -195,6 +210,7 @@ def delete_surgery(begin_time: datetime = None,
     """
         Delete one doc in surgery document.
 
+        :param s_id: surgery id
         :param department: department of chief surgeon
         :param s_name: surgery name
         :param part: part of the surgery operate on
@@ -206,7 +222,7 @@ def delete_surgery(begin_time: datetime = None,
         :param end_time: surgery's end time
         :return: message of whether successfully deleted
         """
-    f = get_filter(department=department, s_name=s_name, part=part, chief_surgeon=chief_surgeon,
+    f = get_filter(s_id=s_id, department=department, s_name=s_name, part=part, chief_surgeon=chief_surgeon,
                    associate_surgeon=associate_surgeon, instrument_nurse=instrument_nurse,
                    circulating_nurse=circulating_nurse, begin_time=begin_time, end_time=end_time)
     try:
@@ -215,3 +231,6 @@ def delete_surgery(begin_time: datetime = None,
     except Exception as e:
         log.error(f"mongodb delete operation in surgery collection failed and raise the following exception: {e}")
         return "unsuccessful"
+
+
+

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+
 from router import user, nurse, doctor, administrator
 
 app = FastAPI(

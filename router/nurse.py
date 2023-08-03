@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from core.backend.nurse import insert_surgery_info, get_instrument_ls, get_surgery_names, get_consumable_stock
 from core.backend.user import auth
-from model.nurse import Surgery
+from model.surgery import SurgeryInsert
 
 router = APIRouter(prefix="/nurse")
 
@@ -23,7 +23,7 @@ def get_instrument_ls_api(s_name: str):
 
 
 @router.post('/add_surgery', tags=["Nurse"], dependencies=[Depends(auth.decode_token)])
-def insert_surgery_api(surgery: Surgery):
+def insert_surgery_api(surgery: SurgeryInsert):
     return insert_surgery_info(ls_c_name=surgery.ls_c_name,
                                ls_i_id=surgery.ls_i_id,
                                p_name=surgery.p_name,

@@ -5,11 +5,13 @@ from fastapi import APIRouter, UploadFile
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTasks
 
-from core.backend.administrator import get_all_users, delete_user_by_uid, add_users_by_file
+from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users
 from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, add_one_instrument, \
     download_instrument_qr_code, delete_instruments_by_id
+from core.backend.surgery import get_surgery_by_tds
 from core.backend.user import register, revise_user_info
 from model.instrument import Instrument
+from model.surgery import SurgeryGet
 from model.user import User
 
 router = APIRouter(prefix="/admin")
@@ -25,9 +27,9 @@ def revise_user(user: User):
     return revise_user_info(u_id=user.u_id, pwd=user.pwd, name=user.name, new_u_id=user.new_id)
 
 
-@router.get('/get_user', tags=['Admin'])
-def get_all_users_api():
-    return get_all_users()
+@router.post('/get_user', tags=['Admin'])
+def get_users_api(user: User):
+    return get_users(u_id=user.u_id, user_type=user.user_type, name=user.name)
 
 
 @router.post('/delete_user', tags=['Admin'])
@@ -91,3 +93,9 @@ def download_qrcode(instrument: Instrument):
     response = FileResponse(res, filename=f"{str(instrument.i_id)}.png", headers={"Access-Control-Expose-Headers":
                                                                                   "content-disposition"})
     return response
+
+
+@router.post('/get_surgery', tags=['Admin'])
+def get_surgery_name_api(surgery: Union[SurgeryGet, None]):
+    return get_surgery_by_tds(begin_time=surgery.begin_time, end_time=surgery.end_time,
+                              department=surgery.department, s_name=surgery.s_name)

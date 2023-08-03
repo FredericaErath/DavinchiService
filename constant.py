@@ -13,9 +13,10 @@ INSTRUMENT_COLUMNS = {"器械名称": "i_name", "使用次数": "times"}
 DC_INSTRUMENT_TO_SUPPLY = {"电剪": "尖端盖附件"}
 DC_SUPPLY_TO_NUMBER = {"无菌壁套": 4, "中心柱无菌套": 1, "尖端盖附件": 1}
 USER_DICT = {"医生": 1, "护士": 2, "管理员": 0}
-DC_DEPARTMENT = {"肝脾外科": "hepa", "胃肠外科": "gastro",
-                 "泌尿外科": "urologic", "胆胰外科": "pancreatic",
+DC_DEPARTMENT = {"肝脾外科": "hepa", "胃肠外科": "gastro", "泌尿外科": "urologic", "胆胰外科": "pancreatic",
                  "胸外科": "chest", "妇科": "gynae", "心脏外科": "cardiac"}
-LS_PART = ["机器人援助下肺病损切除", "机器人援助下半肝切除术", "机器人援助下肾部分切除术", "机器人援助下肾根治性切除术",
-           "机器人援助下肾上腺肿瘤切除", "机器人援助下肾切开取石术", "机器人援助下输尿管膀胱吻合术",
-           "机器人援助下输尿管狭窄段切除吻合术"]
+DC_DEPARTMENT_REVERSE = {'hepa': '肝脾外科', 'gastro': '胃肠外科', 'urologic': '泌尿外科', 'pancreatic': '胆胰外科',
+                         'chest': '胸外科', 'gynae': '妇科', 'cardiac': '心脏外科'}
+LS_PART = ["肺病损切除", "半肝切除术", "肾部分切除术", "肾根治性切除术",
+           "肾上腺肿瘤切除", "肾切开取石术", "输尿管膀胱吻合术",
+           "输尿管狭窄段切除吻合术"]
