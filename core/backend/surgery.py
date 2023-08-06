@@ -28,9 +28,9 @@ def get_surgery_by_tds(begin_time: datetime = None,
         x["associate_surgeon"] = associate["name"]
         x["associate_surgeon_id"] = associate["u_id"]
         x["instrument_nurse_detail"] = list(map(lambda y: get_user(u_id=y)[0], x["instrument_nurse"]))
-        x["instrument_nurse"] = ', '.join(list(map(lambda y: y["name"], x["instrument_nurse_detail"])))
+        x["instrument_nurse"] = ','.join(list(map(lambda y: y["name"], x["instrument_nurse_detail"])))
         x["circulating_nurse_detail"] = list(map(lambda y: get_user(u_id=y)[0], x["circulating_nurse"]))
-        x["circulating_nurse"] = ', '.join(list(map(lambda y: y["name"], x["circulating_nurse_detail"])))
+        x["circulating_nurse"] = ','.join(list(map(lambda y: y["name"], x["circulating_nurse_detail"])))
 
         def _get_instrument_detail(y):
             instrument = get_instrument(i_id=y["id"])[0]
@@ -38,9 +38,9 @@ def get_surgery_by_tds(begin_time: datetime = None,
                     "description": y["description"]}
 
         x["instruments_detail"] = list(map(lambda y: _get_instrument_detail(y), x["instruments"]))
-        x["instruments"] = ', '.join(list(map(lambda y: y["name"], x["instruments_detail"])))
+        x["instruments"] = ','.join(list(map(lambda y: y["name"], x["instruments_detail"])))
         x["consumables_detail"] = list(map(lambda y: get_supply(c_id=y)[0], x["consumables"]))
-        x["consumables"] = ', '.join(list(map(lambda y: y["c_name"], x["consumables_detail"])))
+        x["consumables"] = ','.join(list(map(lambda y: y["c_name"], x["consumables_detail"])))
         x["department"] = DC_DEPARTMENT_REVERSE.get(x["department"])
         x["date"] = x["date"].strftime("%Y-%m-%d")
         x["begin_time"] = x["begin_time"].strftime("%H:%M")

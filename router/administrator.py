@@ -7,7 +7,7 @@ from starlette.background import BackgroundTasks
 
 from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users
 from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, add_one_instrument, \
-    download_instrument_qr_code, delete_instruments_by_id
+    download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
 from core.backend.surgery import get_surgery_by_tds
 from core.backend.user import register, revise_user_info
 from model.instrument import Instrument
@@ -55,6 +55,13 @@ def get_instrument_api():
     return get_all_instrument()
 
 
+@router.post("/get_specific_instruments", tags=['Admin'])
+def get_instrument(instrument: Instrument):
+    return get_instrument_general(begin_time=instrument.begin_time, end_time=instrument.end_time,
+                                  times=instrument.times, i_id=instrument.i_id,
+                                  i_name=instrument.i_name, validity=instrument.validity)
+
+
 @router.post("/revise_instruments", tags=['Admin'])
 def revise_instrument_api(instrument: Instrument):
     return revise_instrument(i_id=instrument.i_id, times=instrument.times)
@@ -91,7 +98,7 @@ def delete_instruments(instrument: Instrument):
 def download_qrcode(instrument: Instrument):
     res = download_instrument_qr_code(i_id=instrument.i_id)
     response = FileResponse(res, filename=f"{str(instrument.i_id)}.png", headers={"Access-Control-Expose-Headers":
-                                                                                  "content-disposition"})
+                                                                                      "content-disposition"})
     return response
 
 

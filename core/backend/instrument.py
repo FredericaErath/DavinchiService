@@ -1,4 +1,5 @@
 import os.path
+from datetime import datetime
 from typing import Union
 import numpy as np
 from fastapi import HTTPException
@@ -22,6 +23,24 @@ def get_all_instrument():
         conditions = [(df['times'] <= 0), (df['times'] > 0)]
         values = ['失效', '有效']
         df["validity"] = np.select(conditions, values)
+        return df.to_dict('records')
+
+
+def get_instrument_general(begin_time: datetime | None = None,
+                           end_time: datetime | None = None,
+                           i_id: int | list[int] | None = None,
+                           i_name: str | list[str] | None = None,
+                           times: int | list[int] | None = None,
+                           validity: bool = None):
+    """
+    Get instruments based on different parameters
+    """
+    instruments = get_instrument(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times,
+                                 validity=validity)
+    if len(instruments) == 0:
+        return []
+    else:
+        df = pd.DataFrame(instruments)[["i_id", "i_name", "times", "insert_time"]]
         return df.to_dict('records')
 
 
@@ -95,4 +114,3 @@ def delete_instruments_by_id(i_id: Union[int, list[int]]):
         raise HTTPException(status_code=500, detail="Something went wrong")
     else:
         return res
-

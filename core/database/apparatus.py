@@ -14,7 +14,8 @@ def get_filter(begin_time: datetime = None,
                end_time: datetime = None,
                i_id: Union[int, list[int]] = None,
                i_name: Union[str, list[str]] = None,
-               times: Union[int, list[int]] = None) -> dict:
+               times: Union[int, list[int]] = None,
+               validity: bool = None) -> dict:
     """
     Get specific instrument filter.
 
@@ -23,6 +24,7 @@ def get_filter(begin_time: datetime = None,
     :param i_id: instrument id, must be not overlay int
     :param i_name: instrument's name
     :param times: times the instrument used
+    :param validity: instruments' validity, if times=0, invalid
     :return: filter
     """
     f = {}
@@ -51,6 +53,11 @@ def get_filter(begin_time: datetime = None,
             f["times"] = {"$in": times}
         else:
             log.error("times should be either str or list")
+    if validity is not None:
+        if validity is True:
+            f["times"] = {"$gte": 1}
+        else:
+            f["times"] = {"$lte": 1}
     return f
 
 
@@ -58,7 +65,8 @@ def get_instrument(begin_time: datetime = None,
                    end_time: datetime = None,
                    i_id: Union[int, list[int]] = None,
                    i_name: Union[str, list[str]] = None,
-                   times: Union[int, list[int]] = None):
+                   times: Union[int, list[int]] = None,
+                   validity: bool = None):
     """
     Get specific instrument.
 
@@ -67,9 +75,10 @@ def get_instrument(begin_time: datetime = None,
     :param i_id: instrument id, must be not overlay int
     :param i_name: instrument's name
     :param times: times the instrument used
+    :param validity: instruments' validity, if times=0, invalid
     :return: list of instruments
     """
-    f = get_filter(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times)
+    f = get_filter(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times, validity=validity)
     return list(apparatus.find(f, {"_id": 0}))
 
 
@@ -133,7 +142,8 @@ def delete_instrument(begin_time: datetime = None,
                       end_time: datetime = None,
                       i_id: Union[int, list[int]] = None,
                       i_name: Union[str, list[str]] = None,
-                      times: Union[int, list[int]] = None):
+                      times: Union[int, list[int]] = None,
+                      validity: bool = None):
     """
     Delete specific instrument.
 
@@ -142,9 +152,10 @@ def delete_instrument(begin_time: datetime = None,
     :param i_id: instrument id, must be not overlay int
     :param i_name: instrument's name
     :param times: times the instrument used
+    :param validity: instruments' validity, if times=0, invalid
     :return: message of whether successfully deleted
     """
-    f = get_filter(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times)
+    f = get_filter(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times, validity=validity)
     try:
         apparatus.delete_many(f)
         return "successful"
@@ -158,7 +169,8 @@ def update_instrument(v_times: int,
                       end_time: datetime = None,
                       i_id: Union[int, list[int]] = None,
                       i_name: Union[str, list[str]] = None,
-                      times: Union[int, list[int]] = None):
+                      times: Union[int, list[int]] = None,
+                      validity: bool = None):
     """
     Update specific user. Only support update one user's info.
 
@@ -168,6 +180,7 @@ def update_instrument(v_times: int,
     :param i_id: instrument id, must not be overlaid
     :param i_name: instrument's name
     :param times: times the instrument used
+    :param validity: instruments' validity, if times=0, invalid
     :return: message of whether successfully updated
     """
     if v_times > 12 or v_times < -1:
@@ -175,7 +188,8 @@ def update_instrument(v_times: int,
         return "unsuccessful"
     else:
         new_value = {"$set": {"times": v_times}}
-        f = get_filter(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times)
+        f = get_filter(begin_time=begin_time, end_time=end_time, i_id=i_id, i_name=i_name, times=times,
+                       validity=validity)
         try:
             apparatus.update_many(f, new_value)
             return "successful"
