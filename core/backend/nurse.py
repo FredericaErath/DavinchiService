@@ -102,8 +102,7 @@ def insert_surgery_info(ls_c_name: list,
                         instrument_nurse: Union[list[str], str],
                         circulating_nurse: Union[list[str], str],
                         begin_time: datetime,
-                        end_time: datetime,
-                        part: str = None):
+                        end_time: datetime):
     """
     Insert a surgery info into database.
 
@@ -119,7 +118,6 @@ def insert_surgery_info(ls_c_name: list,
     :param circulating_nurse: circulating nurse
     :param begin_time: surgery's begin time
     :param end_time: surgery's end time
-    :param part: part of the surgery operate on
     :return: message of whether successfully inserted
     """
     try:
@@ -140,4 +138,4 @@ def insert_surgery_info(ls_c_name: list,
     return insert_surgery(p_name=p_name, admission_number=admission_number, department=department, s_name=s_name,
                           chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
                           instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse, begin_time=begin_time,
-                          end_time=end_time, instruments=instruments, consumables=consumables, part=part)
+                          end_time=end_time, instruments=instruments, consumables=consumables)

@@ -14,7 +14,6 @@ log = logging.getLogger(__name__)
 def get_filter(s_id: int = None,
                begin_time: datetime = None,
                end_time: datetime = None,
-               part: Union[str, list[str]] = None,
                p_name: Union[str, list[str]] = None,
                admission_number: Union[int, list[int]] = None,
                department: Union[str, list[str]] = None,
@@ -29,7 +28,6 @@ def get_filter(s_id: int = None,
     :param s_id: surgery id
     :param begin_time: begin time
     :param end_time: end time
-    :param part: part of the surgery operate on
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon
@@ -47,8 +45,6 @@ def get_filter(s_id: int = None,
         f["date"] = {"$gte": begin_time}
     if end_time is not None:
         f["date"] = {"$lt": end_time}
-    if part is not None:
-        f["part"] = part
     if p_name is not None:
         if isinstance(p_name, int):
             f["p_name"] = p_name
@@ -86,32 +82,22 @@ def get_filter(s_id: int = None,
             log.error("chief_surgeon should be either str or list")
     if associate_surgeon is not None:
         if isinstance(associate_surgeon, str):
-            f["associate_surgeon.id"] = associate_surgeon
+            f["associate_surgeon"] = associate_surgeon
         elif isinstance(associate_surgeon, list):
-            f["associate_surgeon.id"] = {"$in": associate_surgeon}
+            f["associate_surgeon"] = {"$in": associate_surgeon}
         else:
             log.error("associate_surgeon should be either str or list")
     if instrument_nurse is not None:
-        if isinstance(instrument_nurse, str):
-            f["instrument_nurse.id"] = instrument_nurse
-        elif isinstance(instrument_nurse, list):
-            f["instrument_nurse.id"] = {"$in": instrument_nurse}
-        else:
-            log.error("instrument_nurse should be either str or list")
+        # TODO: xxx参加过的手术？
+        f["instrument_nurse"] = {"$in": instrument_nurse}
     if circulating_nurse is not None:
-        if isinstance(circulating_nurse, str):
-            f["circulating_nurse"] = circulating_nurse
-        elif isinstance(circulating_nurse, list):
-            f["circulating_nurse"] = {"$in": circulating_nurse}
-        else:
-            log.error("circulating_nurse should be either str or list")
+        f["circulating_nurse"] = {"$in": circulating_nurse}
     return f
 
 
 def get_surgery(s_id: int = None,
                 begin_time: datetime = None,
                 end_time: datetime = None,
-                part: Union[str, list[str]] = None,
                 p_name: Union[str, list[str]] = None,
                 admission_number: Union[int, list[int]] = None,
                 department: Union[str, list[str]] = None,
@@ -126,7 +112,6 @@ def get_surgery(s_id: int = None,
     :param s_id: surgery id
     :param begin_time: begin time
     :param end_time: end time
-    :param part: part of the surgery operate on
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon
@@ -137,7 +122,7 @@ def get_surgery(s_id: int = None,
     :param circulating_nurse: circulating nurse
     :return: message of whether successfully inserted
     """
-    f = get_filter(s_id=s_id, p_name=p_name, admission_number=admission_number, part=part, department=department,
+    f = get_filter(s_id=s_id, p_name=p_name, admission_number=admission_number, department=department,
                    s_name=s_name,
                    chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon, instrument_nurse=instrument_nurse,
                    circulating_nurse=circulating_nurse, begin_time=begin_time, end_time=end_time)
@@ -155,8 +140,7 @@ def insert_surgery(p_name: str,
                    begin_time: datetime,
                    end_time: datetime,
                    instruments: list[int],
-                   consumables: list[int],
-                   part: str = None):
+                   consumables: list[int]):
     """
     Add one doc in surgery document.
 
@@ -170,9 +154,8 @@ def insert_surgery(p_name: str,
     :param circulating_nurse: circulating nurse
     :param begin_time: surgery's begin time
     :param end_time: surgery's end time
-    :param instruments: instruments
-    :param consumables: consumables
-    :param part: part of the surgery operate on
+    :param instruments: instruments, format in {id: 1, description: "默认"}
+    :param consumables: consumables, format in {id: 1, description: "默认"}
     :return: message of whether successfully inserted
     """
     s_id = list(surgery.find().sort([('s_id', -1)]).limit(1))
@@ -187,7 +170,7 @@ def insert_surgery(p_name: str,
         insert_doc = dict(s_id=s_id, p_name=p_name,
                           date=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
                           admission_number=admission_number, department=DC_DEPARTMENT.get(department), s_name=s_name,
-                          chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon, part=part,
+                          chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
                           instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse, begin_time=begin_time,
                           end_time=end_time, instruments=instruments, consumables=consumables)
         surgery.insert_one(insert_doc)
@@ -200,7 +183,6 @@ def insert_surgery(p_name: str,
 def delete_surgery(s_id: int = None,
                    begin_time: datetime = None,
                    end_time: datetime = None,
-                   part: Union[str, list[str]] = None,
                    department: Union[str, list[str]] = None,
                    s_name: Union[str, list[str]] = None,
                    chief_surgeon: Union[str, list[str]] = None,
@@ -213,7 +195,6 @@ def delete_surgery(s_id: int = None,
         :param s_id: surgery id
         :param department: department of chief surgeon
         :param s_name: surgery name
-        :param part: part of the surgery operate on
         :param chief_surgeon: chief surgeon
         :param associate_surgeon: associate surgeon
         :param instrument_nurse: instrument nurse
@@ -222,7 +203,7 @@ def delete_surgery(s_id: int = None,
         :param end_time: surgery's end time
         :return: message of whether successfully deleted
         """
-    f = get_filter(s_id=s_id, department=department, s_name=s_name, part=part, chief_surgeon=chief_surgeon,
+    f = get_filter(s_id=s_id, department=department, s_name=s_name, chief_surgeon=chief_surgeon,
                    associate_surgeon=associate_surgeon, instrument_nurse=instrument_nurse,
                    circulating_nurse=circulating_nurse, begin_time=begin_time, end_time=end_time)
     try:
@@ -233,4 +214,67 @@ def delete_surgery(s_id: int = None,
         return "unsuccessful"
 
 
+def update_surgery(s_id: int,
+                   begin_time: datetime = None,
+                   end_time: datetime = None,
+                   date: datetime = None,
+                   admission_number: int = None,
+                   department: str = None,
+                   s_name: str = None,
+                   chief_surgeon: str = None,
+                   associate_surgeon: str = None,
+                   instrument_nurse: list = None,
+                   circulating_nurse: list = None,
+                   instruments: list = None,
+                   consumables: list = None):
+    """
+    Update one surgery info based on surgery id.
 
+    :param admission_number: admission number
+    :param date: date of the surgery
+    :param s_id: surgery id
+    :param department: department of chief surgeon
+    :param s_name: surgery name
+    :param chief_surgeon: chief surgeon
+    :param associate_surgeon: associate surgeon
+    :param instrument_nurse: instrument nurse
+    :param circulating_nurse: circulating nurse
+    :param begin_time: surgery's begin time
+    :param end_time: surgery's end time
+    :param instruments: instruments info
+    :param consumables: consumables info
+    :return: update message
+    """
+    dc_set = {}
+    if begin_time is not None:
+        dc_set["begin_time"] = begin_time
+    if date is not None:
+        dc_set["date"] = date
+    if admission_number is not None:
+        dc_set["admission_number"] = admission_number
+    if end_time is not None:
+        dc_set["end_time"] = end_time
+    if department is not None:
+        dc_set["department"] = DC_DEPARTMENT.get(department)
+    if s_name is not None:
+        dc_set["s_name"] = s_name
+    if associate_surgeon is not None:
+        dc_set["associate_surgeon"] = associate_surgeon
+    if chief_surgeon is not None:
+        dc_set["chief_surgeon"] = chief_surgeon
+    if instrument_nurse is not None:
+        dc_set["instrument_nurse"] = instrument_nurse
+    if circulating_nurse is not None:
+        dc_set["circulating_nurse"] = circulating_nurse
+    if consumables is not None:
+        dc_set["consumables"] = consumables
+    if instruments is not None:
+        dc_set["instruments"] = instruments
+    new_value = {"$set": dc_set}
+    f = get_filter(s_id=s_id)
+    try:
+        surgery.update_many(f, new_value)
+        return "successful"
+    except Exception as e:
+        log.error(f"mongodb update operation in user collection failed and raise the following exception: {e}")
+        return "unsuccessful"

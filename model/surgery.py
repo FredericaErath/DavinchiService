@@ -16,7 +16,6 @@ class SurgeryInsert(BaseModel):
     circulating_nurse: list
     begin_time: datetime
     end_time: datetime
-    part: str
 
 
 class SurgeryGet(BaseModel):
@@ -24,3 +23,19 @@ class SurgeryGet(BaseModel):
     end_time: Optional[datetime] = None
     department: Union[str, list[str]] = None
     s_name: Union[str, list[str]] = None
+
+
+class SurgeryUpdate(BaseModel):
+    s_id: int
+    begin_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    date: Optional[datetime] = None,
+    admission_number: Optional[int] = None,
+    department: Optional[str] = None
+    s_name: Optional[str] = None
+    chief_surgeon: Optional[str] = None
+    associate_surgeon: Optional[str] = None
+    instrument_nurse: Optional[list] = None
+    circulating_nurse: Optional[list] = None
+    instruments: Optional[list] = None
+    consumables: Optional[list] = None

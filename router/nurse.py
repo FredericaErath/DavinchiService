@@ -35,5 +35,4 @@ def insert_surgery_api(surgery: SurgeryInsert):
                                instrument_nurse=surgery.instrument_nurse,
                                circulating_nurse=surgery.circulating_nurse,
                                begin_time=surgery.begin_time,
-                               end_time=surgery.end_time,
-                               part=surgery.part)
+                               end_time=surgery.end_time)

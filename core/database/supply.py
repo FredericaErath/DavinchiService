@@ -16,7 +16,7 @@ def get_filter(begin_time: datetime = None,
                c_name: Union[str, list[str]] = None,
                description: Union[str, list[str]] = None) -> dict:
     """
-
+    Get supply filter.
 
     :param begin_time: insert_time should >= begin_time
     :param end_time: insert_time should < begin_time
@@ -36,7 +36,7 @@ def get_filter(begin_time: datetime = None,
         elif isinstance(c_id, list):
             f["c_id"] = {"$in": c_id}
         else:
-            log.error("c_id should be either str or list")
+            log.error("c_id should be either int or list")
     if c_name is not None:
         if isinstance(c_name, str):
             f["c_name"] = c_name
