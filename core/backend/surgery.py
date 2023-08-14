@@ -8,13 +8,18 @@ from fastapi import HTTPException
 from constant import DC_DEPARTMENT_REVERSE, DC_DEPARTMENT
 from core.backend.instrument import revise_instrument
 from core.backend.supply import update_supply_description
-from core.database import get_surgery, get_user, get_instrument, get_supply, update_surgery
+from core.database import get_surgery, get_user, get_instrument, get_supply, update_surgery, insert_surgery
 
 
-def get_surgery_by_tds(begin_time: datetime = None,
+def get_surgery_by_tds(page: int = None,
+                       limit_size: int = None,
+                       begin_time: datetime = None,
                        end_time: datetime = None,
                        department: Union[str, list[str]] = None,
                        s_name: Union[str, list[str]] = None):
+    """
+    This get function should support pagination.
+    """
     if department is not None:
         if isinstance(department, str):
             department = DC_DEPARTMENT.get(department)
@@ -55,7 +60,12 @@ def get_surgery_by_tds(begin_time: datetime = None,
         x["end_time"] = x["end_time"].strftime("%H:%M")
         return x
 
-    surgery = get_surgery(begin_time=begin_time, end_time=end_time, department=department, s_name=s_name)
+    if page is not None and limit_size is not None:
+        skip_size = (page - 1) * limit_size
+    else:
+        skip_size = None
+    surgery = get_surgery(skip_size=skip_size, limit_size=limit_size,
+                          begin_time=begin_time, end_time=end_time, department=department, s_name=s_name)
     if len(surgery) == 0:
         return []
     else:
@@ -64,10 +74,11 @@ def get_surgery_by_tds(begin_time: datetime = None,
 
 
 def update_surgery_info(s_id: int,
+                        p_name: str = None,
                         begin_time: datetime = None,
                         end_time: datetime = None,
                         date: datetime = None,
-                        admission_number: str = None,
+                        admission_number: int = None,
                         department: Union[str, list[str]] = None,
                         s_name: Union[str, list[str]] = None,
                         chief_surgeon: Union[str, list[str]] = None,
@@ -79,18 +90,6 @@ def update_surgery_info(s_id: int,
     # format every input parameter
     if department is not None:
         department = DC_DEPARTMENT.get(department)
-
-    if chief_surgeon is not None:
-        chief_surgeon = get_user(user_type="医生", name=chief_surgeon)[0]["u_id"]
-
-    if associate_surgeon is not None:
-        associate_surgeon = get_user(user_type="医生", name=associate_surgeon)[0]["u_id"]
-
-    if instrument_nurse is not None:
-        instrument_nurse = list(map(lambda x: get_user(user_type="护士", name=x)[0]["u_id"], instrument_nurse))
-
-    if circulating_nurse is not None:
-        circulating_nurse = list(map(lambda x: get_user(user_type="护士", name=x)[0]["u_id"], circulating_nurse))
 
     if instruments is not None:
         def _revise_instruments(x):
@@ -107,12 +106,55 @@ def update_surgery_info(s_id: int,
         consumables = list(map(lambda x: _revise_consumables(x), consumables))
 
     res = update_surgery(s_id=s_id, begin_time=begin_time, date=date, admission_number=admission_number,
-                         end_time=end_time, department=department, s_name=s_name,
+                         end_time=end_time, department=department, s_name=s_name, p_name=p_name,
                          chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
                          instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse,
                          instruments=instruments, consumables=consumables)
 
     if res == "unsuccessful":
         raise HTTPException(status_code=400, detail="Update failed. Please check the input info.")
+    else:
+        return res
+
+
+def insert_surgery_admin(begin_time: datetime,
+                         end_time: datetime,
+                         p_name: str,
+                         date: datetime,
+                         admission_number: int,
+                         department: str,
+                         s_name: str,
+                         chief_surgeon: str,
+                         associate_surgeon: str,
+                         instrument_nurse: list[str],
+                         circulating_nurse: list[str],
+                         instruments: list[dict],
+                         consumables: list[int]):
+    # format every input parameter
+    if department is not None:
+        department = DC_DEPARTMENT.get(department)
+
+    if instruments is not None:
+        def _revise_instruments(x):
+            revise_instrument(x["id"], x["times"]-1)
+            return {"id": x["id"], "description": x["description"]}
+
+        instruments = list(map(lambda x: _revise_instruments(x), instruments))
+
+    if consumables is not None:
+        def _revise_consumables(x):
+            update_supply_description(x["id"], x["description"])
+            return x["id"]
+
+        consumables = list(map(lambda x: _revise_consumables(x), consumables))
+
+    res = insert_surgery(begin_time=begin_time, date=date, admission_number=admission_number,
+                         end_time=end_time, department=department, s_name=s_name, p_name=p_name,
+                         chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
+                         instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse,
+                         instruments=instruments, consumables=consumables)
+
+    if res == "unsuccessful":
+        raise HTTPException(status_code=400, detail="Insert failed. Please check the input info.")
     else:
         return res

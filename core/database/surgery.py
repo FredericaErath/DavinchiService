@@ -41,10 +41,12 @@ def get_filter(s_id: int = None,
     f = {}
     if s_id is not None:
         f["s_id"] = s_id
-    if begin_time is not None:
+    if begin_time is not None and end_time is None:
         f["date"] = {"$gte": begin_time}
-    if end_time is not None:
+    elif end_time is not None and begin_time is None:
         f["date"] = {"$lt": end_time}
+    elif begin_time is not None and end_time is not None:
+        f["date"] = {"$lt": end_time, "$gte": begin_time}
     if p_name is not None:
         if isinstance(p_name, int):
             f["p_name"] = p_name
@@ -61,9 +63,9 @@ def get_filter(s_id: int = None,
             log.error("admission_number should be either int or list")
     if department is not None:
         if isinstance(department, str):
-            f["department"] = DC_DEPARTMENT.get(department)
+            f["department"] = department
         elif isinstance(department, list):
-            f["department"] = {"$in": list(map(lambda x: DC_DEPARTMENT.get(x), department))}
+            f["department"] = {"$in": department}
         else:
             log.error("department should be either str or list")
     if s_name is not None:
@@ -95,7 +97,9 @@ def get_filter(s_id: int = None,
     return f
 
 
-def get_surgery(s_id: int = None,
+def get_surgery(skip_size: int = None,
+                limit_size: int = None,
+                s_id: int = None,
                 begin_time: datetime = None,
                 end_time: datetime = None,
                 p_name: Union[str, list[str]] = None,
@@ -109,6 +113,8 @@ def get_surgery(s_id: int = None,
     """
     Get specific surgery filter.
 
+    :param skip_size: skip size
+    :param limit_size: pagintion parameter, limit page size
     :param s_id: surgery id
     :param begin_time: begin time
     :param end_time: end time
@@ -123,10 +129,17 @@ def get_surgery(s_id: int = None,
     :return: message of whether successfully inserted
     """
     f = get_filter(s_id=s_id, p_name=p_name, admission_number=admission_number, department=department,
-                   s_name=s_name,
-                   chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon, instrument_nurse=instrument_nurse,
-                   circulating_nurse=circulating_nurse, begin_time=begin_time, end_time=end_time)
-    return list(surgery.find(f, {"_id": 0}))
+                   s_name=s_name, chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
+                   instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse,
+                   begin_time=begin_time, end_time=end_time)
+    if skip_size is not None and limit_size is not None:
+        return list(surgery.find(f, {"_id": 0}).skip(skip_size).limit(limit_size))
+    elif skip_size is None and limit_size is not None:
+        return list(surgery.find(f, {"_id": 0}).limit(limit_size))
+    elif limit_size is None and skip_size is not None:
+        return list(surgery.find(f, {"_id": 0}).skip(skip_size))
+    else:
+        return list(surgery.find(f, {"_id": 0}))
 
 
 def insert_surgery(p_name: str,
@@ -137,13 +150,15 @@ def insert_surgery(p_name: str,
                    associate_surgeon: str,
                    instrument_nurse: list[str],
                    circulating_nurse: list[str],
+                   date: datetime,
                    begin_time: datetime,
                    end_time: datetime,
-                   instruments: list[int],
+                   instruments: list[dict],
                    consumables: list[int]):
     """
     Add one doc in surgery document.
 
+    :param s_id: surgery id
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon
@@ -152,10 +167,11 @@ def insert_surgery(p_name: str,
     :param associate_surgeon: associate surgeon
     :param instrument_nurse: instrument nurse
     :param circulating_nurse: circulating nurse
+    :param date: date of the surgery
     :param begin_time: surgery's begin time
     :param end_time: surgery's end time
     :param instruments: instruments, format in {id: 1, description: "默认"}
-    :param consumables: consumables, format in {id: 1, description: "默认"}
+    :param consumables: consumables, format in [1 ,2]
     :return: message of whether successfully inserted
     """
     s_id = list(surgery.find().sort([('s_id', -1)]).limit(1))
@@ -165,12 +181,9 @@ def insert_surgery(p_name: str,
         s_id = s_id[0]["s_id"] + 1
 
     try:
-        if s_name not in LS_PART:
-            part = ""
-        insert_doc = dict(s_id=s_id, p_name=p_name,
-                          date=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
-                          admission_number=admission_number, department=DC_DEPARTMENT.get(department), s_name=s_name,
-                          chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
+        insert_doc = dict(s_id=s_id, p_name=p_name, date=date, admission_number=admission_number,
+                          department=department, s_name=s_name, chief_surgeon=chief_surgeon,
+                          associate_surgeon=associate_surgeon,
                           instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse, begin_time=begin_time,
                           end_time=end_time, instruments=instruments, consumables=consumables)
         surgery.insert_one(insert_doc)
@@ -215,6 +228,7 @@ def delete_surgery(s_id: int = None,
 
 
 def update_surgery(s_id: int,
+                   p_name: str,
                    begin_time: datetime = None,
                    end_time: datetime = None,
                    date: datetime = None,
@@ -233,6 +247,7 @@ def update_surgery(s_id: int,
     :param admission_number: admission number
     :param date: date of the surgery
     :param s_id: surgery id
+    :param p_name: patient's name
     :param department: department of chief surgeon
     :param s_name: surgery name
     :param chief_surgeon: chief surgeon
@@ -255,9 +270,11 @@ def update_surgery(s_id: int,
     if end_time is not None:
         dc_set["end_time"] = end_time
     if department is not None:
-        dc_set["department"] = DC_DEPARTMENT.get(department)
+        dc_set["department"] = department
     if s_name is not None:
         dc_set["s_name"] = s_name
+    if p_name is not None:
+        dc_set["p_name"] = p_name
     if associate_surgeon is not None:
         dc_set["associate_surgeon"] = associate_surgeon
     if chief_surgeon is not None:

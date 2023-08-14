@@ -19,6 +19,8 @@ class SurgeryInsert(BaseModel):
 
 
 class SurgeryGet(BaseModel):
+    page: Optional[int] = None
+    limit_size: Optional[int] = 20
     begin_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     department: Union[str, list[str]] = None
@@ -26,11 +28,12 @@ class SurgeryGet(BaseModel):
 
 
 class SurgeryUpdate(BaseModel):
-    s_id: int
+    s_id: Optional[int] = None
+    p_name: Optional[str] = None
     begin_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    date: Optional[datetime] = None,
-    admission_number: Optional[int] = None,
+    date: Optional[datetime] = None
+    admission_number: Optional[int] = None
     department: Optional[str] = None
     s_name: Optional[str] = None
     chief_surgeon: Optional[str] = None

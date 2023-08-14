@@ -3,7 +3,7 @@ from typing import Union
 
 from fastapi import HTTPException
 
-from core.database import get_supply, update_supply
+from core.database import get_supply, update_supply, insert_supply, delete_supply
 
 
 def get_supply_general(begin_time: datetime = None,
@@ -34,3 +34,26 @@ def update_supply_description(c_id: int, description: str):
         raise HTTPException(status_code=400, detail="Update failed. Please check the input info.")
     else:
         return res
+
+
+def insert_supplies(c_name: str, num: int):
+    """
+    Insert supplies based on num
+    """
+    for i in range(num):
+        res = insert_supply(c_name=c_name)
+        if res == "unsuccessful":
+            raise HTTPException(status_code=400, detail="Insert failed. Please check the input info.")
+    return "successful"
+
+
+def delete_supply_by_id(c_id: Union[int, list[int]]):
+    """
+    Delete supplies by id
+    """
+    res = delete_supply(c_id=c_id)
+    if res == "unsuccessful":
+        raise HTTPException(status_code=400, detail="Delete failed. Please check the input info.")
+    else:
+        return res
+

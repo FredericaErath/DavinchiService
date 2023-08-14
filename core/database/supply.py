@@ -26,10 +26,12 @@ def get_filter(begin_time: datetime = None,
     :return: filter
     """
     f = {}
-    if begin_time is not None:
+    if begin_time is not None and end_time is None:
         f["insert_time"] = {"$gte": begin_time}
-    if end_time is not None:
+    if end_time is not None and begin_time is None:
         f["insert_time"] = {"$lt": end_time}
+    if begin_time is not None and end_time is not None:
+        f["insert_time"] = {"$lt": end_time, "$gte": begin_time}
     if c_id is not None:
         if isinstance(c_id, int):
             f["c_id"] = c_id
@@ -79,7 +81,7 @@ def get_newest_supply(n_limit: int, c_name: str):
 
 
 def insert_supply(c_name: str,
-                  description: str):
+                  description: str = ""):
     """
     Insert a specific supply.
 
@@ -148,3 +150,4 @@ def update_supply(begin_time: datetime = None,
     except Exception as e:
         log.error(f"mongodb delete operation in supplies collection failed and raise the following exception: {e}")
         return "unsuccessful"
+

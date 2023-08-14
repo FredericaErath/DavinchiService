@@ -10,3 +10,13 @@ class Supply(BaseModel):
     c_id: Optional[Union[int, list[int]]] = None
     c_name: Optional[Union[str, list[str]]] = None
     description: Optional[Union[str, list[str]]] = None
+
+
+class SupplyGet(BaseModel):
+    c_name: str
+    num: int
+
+
+class SupplyRevise(BaseModel):
+    c_id: int
+    description: str

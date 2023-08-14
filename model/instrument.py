@@ -10,4 +10,3 @@ class Instrument(BaseModel):
     begin_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     validity: bool = None
-

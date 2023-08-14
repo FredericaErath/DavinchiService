@@ -28,10 +28,12 @@ def get_filter(begin_time: datetime = None,
     :return: filter
     """
     f = {}
-    if begin_time is not None:
+    if begin_time is not None and end_time is None:
         f["insert_time"] = {"$gte": begin_time}
-    if end_time is not None:
+    if end_time is not None and begin_time is None:
         f["insert_time"] = {"$lt": end_time}
+    if begin_time is not None and end_time is not None:
+        f["insert_time"] = {"$lt": end_time, "$gte": begin_time}
     if i_id is not None:
         if isinstance(i_id, int):
             f["i_id"] = i_id

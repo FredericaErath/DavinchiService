@@ -41,6 +41,9 @@ def get_instrument_general(begin_time: datetime | None = None,
         return []
     else:
         df = pd.DataFrame(instruments)[["i_id", "i_name", "times", "insert_time"]]
+        conditions = [(df['times'] <= 0), (df['times'] > 0)]
+        values = ['失效', '有效']
+        df["validity"] = np.select(conditions, values)
         return df.to_dict('records')
 
 
