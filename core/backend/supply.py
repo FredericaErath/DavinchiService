@@ -10,7 +10,8 @@ def get_supply_general(begin_time: datetime = None,
                        end_time: datetime = None,
                        c_id: Union[int, list[int]] = None,
                        c_name: Union[str, list[str]] = None,
-                       description: Union[str, list[str]] = None):
+                       description: Union[str, list[str]] = None,
+                       validity: bool = None):
     """
     Get specific supply.
 
@@ -19,9 +20,11 @@ def get_supply_general(begin_time: datetime = None,
     :param c_id: supply id, must be not overlay int
     :param c_name: supply's name
     :param description: supply's description
+    :param validity: true or false
     :return: filter
     """
-    supplies = get_supply(begin_time=begin_time, end_time=end_time, c_id=c_id, c_name=c_name, description=description)
+    supplies = get_supply(begin_time=begin_time, end_time=end_time, c_id=c_id, c_name=c_name, description=description,
+                          validity=validity)
     if len(supplies) == 0:
         return []
     else:

@@ -6,13 +6,14 @@ from fastapi.responses import FileResponse
 from starlette.background import BackgroundTasks
 
 from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users
+from core.backend.dashboard import get_surgery_dashboard, get_doctor_contribution
 from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, add_one_instrument, \
     download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
 from core.backend.supply import get_supply_general, insert_supplies, delete_supply_by_id, update_supply_description
 from core.backend.surgery import get_surgery_by_tds, update_surgery_info, insert_surgery_admin
 from core.backend.user import register, revise_user_info
 from model.instrument import Instrument
-from model.surgery import SurgeryGet, SurgeryUpdate
+from model.surgery import SurgeryGet, SurgeryUpdate, Contribution
 from model.supply import Supply, SupplyGet, SupplyRevise
 from model.user import User
 
@@ -142,7 +143,8 @@ def insert_surgery(surgery: SurgeryUpdate):
 @router.post('/get_supply', tags=['Admin'])
 def get_supply_api(supply: Union[Supply, None]):
     return get_supply_general(begin_time=supply.begin_time, end_time=supply.end_time,
-                              c_id=supply.c_id, c_name=supply.c_name, description=supply.description)
+                              c_id=supply.c_id, c_name=supply.c_name,
+                              description=supply.description, validity=supply.validity)
 
 
 @router.post("/insert_supply", tags=['Admin'])
@@ -160,4 +162,11 @@ def revise_supply(supply: SupplyRevise):
     return update_supply_description(c_id=supply.c_id, description=supply.description)
 
 
+@router.post("/get_surgery_dashboard", tags=['Admin'])
+def get_surgery_dashboard_api(supply: Supply):
+    return get_surgery_dashboard(begin_time=supply.begin_time, end_time=supply.end_time)
 
+
+@router.post("/get_doctor_contribution", tags=['Admin'])
+def get_doctor_contribution_api(contribution: Contribution):
+    return get_doctor_contribution(df=contribution.df, name=contribution.name)

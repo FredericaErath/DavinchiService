@@ -1,14 +1,13 @@
-import time
-from collections import Counter
 from datetime import datetime
 from typing import Union
-
+import pandas as pd
 from fastapi import HTTPException
-
 from constant import DC_DEPARTMENT_REVERSE, DC_DEPARTMENT
 from core.backend.instrument import revise_instrument
 from core.backend.supply import update_supply_description
 from core.database import get_surgery, get_user, get_instrument, get_supply, update_surgery, insert_surgery
+
+pd.set_option('display.max_columns', None)
 
 
 def get_surgery_by_tds(page: int = None,
@@ -136,7 +135,7 @@ def insert_surgery_admin(begin_time: datetime,
 
     if instruments is not None:
         def _revise_instruments(x):
-            revise_instrument(x["id"], x["times"]-1)
+            revise_instrument(x["id"], x["times"] - 1)
             return {"id": x["id"], "description": x["description"]}
 
         instruments = list(map(lambda x: _revise_instruments(x), instruments))
@@ -158,3 +157,4 @@ def insert_surgery_admin(begin_time: datetime,
         raise HTTPException(status_code=400, detail="Insert failed. Please check the input info.")
     else:
         return res
+

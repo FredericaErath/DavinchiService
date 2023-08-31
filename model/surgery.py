@@ -42,3 +42,8 @@ class SurgeryUpdate(BaseModel):
     circulating_nurse: Optional[list] = None
     instruments: Optional[list] = None
     consumables: Optional[list] = None
+
+
+class Contribution(BaseModel):
+    df: list
+    name: str

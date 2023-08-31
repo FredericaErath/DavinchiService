@@ -14,7 +14,8 @@ def get_filter(begin_time: datetime = None,
                end_time: datetime = None,
                c_id: Union[int, list[int]] = None,
                c_name: Union[str, list[str]] = None,
-               description: Union[str, list[str]] = None) -> dict:
+               description: Union[str, list[str]] = None,
+               validity: bool = None) -> dict:
     """
     Get supply filter.
 
@@ -23,6 +24,7 @@ def get_filter(begin_time: datetime = None,
     :param c_id: supply id, must be not overlay int
     :param c_name: supply's name
     :param description: supply's description
+    :param validity: true or false
     :return: filter
     """
     f = {}
@@ -53,6 +55,11 @@ def get_filter(begin_time: datetime = None,
             f["description"] = {"$in": description}
         else:
             log.error("description should be either str or list")
+    if validity is not None:
+        if validity is True:
+            f["description"] = ""
+        else:
+            f["description"] = {"$ne": ""}
     return f
 
 
@@ -60,7 +67,8 @@ def get_supply(begin_time: datetime = None,
                end_time: datetime = None,
                c_id: Union[int, list[int]] = None,
                c_name: Union[str, list[str]] = None,
-               description: Union[str, list[str]] = None):
+               description: Union[str, list[str]] = None,
+               validity: bool = None):
     """
     Get specific supply.
 
@@ -69,9 +77,11 @@ def get_supply(begin_time: datetime = None,
     :param c_id: supply id, must be not overlay int
     :param c_name: supply's name
     :param description: supply's description
+    :param validity: true or false
     :return: filter
     """
-    f = get_filter(begin_time=begin_time, end_time=end_time, c_id=c_id, c_name=c_name, description=description)
+    f = get_filter(begin_time=begin_time, end_time=end_time, c_id=c_id, c_name=c_name, description=description,
+                   validity=validity)
     return list(supplies.find(f, {"_id": 0}))
 
 
