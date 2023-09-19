@@ -1,6 +1,7 @@
 from datetime import datetime
 import pandas as pd
 
+from constant import PRICE_MAP
 from core.backend.surgery import get_surgery_by_tds
 
 
@@ -38,17 +39,78 @@ def get_detail_count(df, name: str):
     return count, accident_count
 
 
+def get_doctor_contribution(df: list, name: str):
+    """Helper functions to get doctor's daily contributions"""
+    df = pd.DataFrame(df)
+    df = df[df["chief_surgeon"] == name].groupby(["date"]).count()["p_name"].reset_index().rename(
+        columns={"p_name": "count"})
+    return df.to_dict("records")
+
+
+def get_time_series(df, name: str):
+    """Helper function to get instrument or consumables time series"""
+    x_axis = df["date"].drop_duplicates().sort_values()
+    data = []
+    legend = []
+    if name == "instruments":
+        series = df[["name", "count", "date", "id"]]
+        for key, value in series.groupby(["id"]):
+            value = value.merge(x_axis, on="date", how="outer").sort_values("date").fillna(0)
+            name = f"{key[0]}号{value['name'][0]}"
+            legend.append(name)
+            data.append({"name": name, "data": value["count"].tolist(), "type": "line"})
+    if name == "consumables":
+        series = df[["name", "count", "date"]]
+        for key, value in series.groupby(["name"]):
+            value = value.merge(x_axis, on="date", how="outer").drop_duplicates("date").sort_values("date").fillna(0)
+            name = key[0]
+            legend.append(name)
+            data.append({"name": name, "data": value["count"].tolist(), "type": "line"})
+    return {"xAxis": x_axis.tolist(), "series": data, "legend": legend}
+
+
+def get_benefit_analysis(df):
+    """
+    Helper function to get benefit analysis data
+    """
+    def _format(num):
+        return "%.2f" % float(num)
+
+    def calculate_price(x):
+        instruments = x["instruments"].split(',')
+        consumables = x["consumables"].split(',')
+        i_sum = 0
+        for i in instruments:
+            i_sum += PRICE_MAP[i]
+        for j in consumables:
+            i_sum += PRICE_MAP[j]
+        return i_sum
+
+    df["sum"] = df.apply(lambda x: calculate_price(x[["instruments", "consumables"]]), axis=1)
+    df["real_sum"] = 33000
+    df["gap"] = df["real_sum"] - df["sum"]
+    sum_all = {"total_cost": _format(df["sum"].sum()), "total_paid": _format(df["real_sum"].sum()),
+               "total_gap": _format(df["gap"].sum())}
+    df["sum"] = df["sum"].apply(lambda x: format(x, '.2f'))
+    df["gap"] = df["gap"].apply(lambda x: format(x, '.2f'))
+    return df[["p_name", "date", "admission_number", "department", "s_name", "chief_surgeon", "instruments",
+               "consumables", "sum", "real_sum", "gap"]], sum_all
+
+
 def get_surgery_dashboard(begin_time: datetime = None, end_time: datetime = None):
     df = pd.DataFrame(get_surgery_by_tds(begin_time=begin_time, end_time=end_time))
     if len(df) == 0:
-        return {"surgeon_count": [], "nurse_count": [], "department_count": [], "top_ten": [[], []]}
+        return {"surgeon_count": [], "nurse_count": [], "department_count": [], "top_ten": [[], []],
+                "instrument_count": [], "accident_instrument_count": [], "consumable_count": [],
+                "accident_consumable_count": [], "instrument_time_series": [], "instrument_acc_time_series": [],
+                "consumable_time_series": [], "consumable_acc_time_series": [], "df_benefits": [], "sum_all": []}
+
     # get surgeon and department count
     surgeon_count = df.groupby(["department",
                                 "chief_surgeon"]).count()["p_name"].reset_index().rename(columns={"p_name": "c_count"})
     grouped = surgeon_count.groupby(["department"])["c_count"].sum().reset_index().rename(
         columns={"c_count": "d_count"})
     surgeon_count = surgeon_count.merge(grouped, how="left", on="department", validate="m:1")
-
     department_count = surgeon_count[["department", "d_count"]].drop_duplicates().rename(
         columns={"department": "name", "d_count": "value"})
 
@@ -76,6 +138,11 @@ def get_surgery_dashboard(begin_time: datetime = None, end_time: datetime = None
     # get time series
     instrument_time_series = get_time_series(instrument_count, "instruments")
     instrument_accident_time_series = get_time_series(accident_instrument_count, "instruments")
+    consumable_time_series = get_time_series(consumable_count, "consumables")
+    consumable_accident_time_series = get_time_series(accident_consumable_count, "consumables")
+
+    # get benefit analysis
+    df_benefits, sum_all = get_benefit_analysis(df)
 
     return {"df": df[["chief_surgeon", "date", "p_name"]].to_dict('records'),
             "surgeon_count": surgeon_count.to_dict('records'),
@@ -86,24 +153,8 @@ def get_surgery_dashboard(begin_time: datetime = None, end_time: datetime = None
             "consumable_count": consumable_count.to_dict('records'),
             "accident_consumable_count": accident_consumable_count.to_dict('records'),
             "instrument_time_series": instrument_time_series,
-            "instrument_acc_time_series": instrument_accident_time_series}
+            "instrument_acc_time_series": instrument_accident_time_series,
+            "consumable_time_series": consumable_time_series,
+            "consumable_acc_time_series": consumable_accident_time_series,
+            "df_benefits": df_benefits.to_dict('records'), "sum_all": sum_all}
 
-
-def get_doctor_contribution(df: list, name: str):
-    df = pd.DataFrame(df)
-    df = df[df["chief_surgeon"] == name].groupby(["date"]).count()["p_name"].reset_index().rename(
-        columns={"p_name": "count"})
-    return df.to_dict("records")
-
-
-def get_time_series(df, name: str):
-    x_axis = df["date"].drop_duplicates().sort_values()
-    series = df[["name", "count", "date", "id"]]
-    data = []
-    legend = []
-    for key, value in series.groupby(["id"]):
-        value = value.merge(x_axis, on="date", how="outer").sort_values("date").fillna(0)
-        name = f"{key[0]}号{value['name'][0]}"
-        legend.append(name)
-        data.append({"name": name, "data": value["count"].tolist(), "type": "line"})
-    return {"xAxis": x_axis.tolist(), "series": data, "legend": legend}
