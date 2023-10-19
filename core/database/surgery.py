@@ -158,7 +158,6 @@ def insert_surgery(p_name: str,
     """
     Add one doc in surgery document.
 
-    :param s_id: surgery id
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon

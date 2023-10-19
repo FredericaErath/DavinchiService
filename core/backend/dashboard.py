@@ -1,5 +1,6 @@
 from datetime import datetime
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from constant import PRICE_MAP
 from core.backend.surgery import get_surgery_by_tds
@@ -73,6 +74,7 @@ def get_benefit_analysis(df):
     """
     Helper function to get benefit analysis data
     """
+
     def _format(num):
         return "%.2f" % float(num)
 
@@ -98,6 +100,11 @@ def get_benefit_analysis(df):
 
 
 def get_surgery_dashboard(begin_time: datetime = None, end_time: datetime = None):
+    # By default, the data of the past year is obtained
+    if begin_time is None and end_time is None:
+        end_time = datetime.now()
+        begin_time = end_time - relativedelta(years=1)
+
     df = pd.DataFrame(get_surgery_by_tds(begin_time=begin_time, end_time=end_time))
     if len(df) == 0:
         return {"surgeon_count": [], "nurse_count": [], "department_count": [], "top_ten": [[], []],

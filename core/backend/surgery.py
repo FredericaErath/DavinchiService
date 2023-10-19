@@ -5,7 +5,8 @@ from fastapi import HTTPException
 from constant import DC_DEPARTMENT_REVERSE, DC_DEPARTMENT
 from core.backend.instrument import revise_instrument
 from core.backend.supply import update_supply_description
-from core.database import get_surgery, get_user, get_instrument, get_supply, update_surgery, insert_surgery
+from core.database import get_surgery, get_user, get_instrument, get_supply, update_surgery, insert_surgery, \
+    update_supply, get_newest_supply
 
 pd.set_option('display.max_columns', None)
 
@@ -55,8 +56,8 @@ def get_surgery_by_tds(page: int = None,
         x["consumables"] = ','.join(list(map(lambda y: y["name"], x["consumables_detail"])))
         x["department"] = DC_DEPARTMENT_REVERSE.get(x["department"])
         x["date"] = x["date"].strftime("%Y-%m-%d")
-        x["begin_time"] = x["begin_time"].strftime("%H:%M")
-        x["end_time"] = x["end_time"].strftime("%H:%M")
+        x["begin_time"] = x["begin_time"].strftime("%Y-%m-%d %H:%M")
+        x["end_time"] = x["end_time"].strftime("%Y-%m-%d %H:%M")
         return x
 
     if page is not None and limit_size is not None:
@@ -116,6 +117,51 @@ def update_surgery_info(s_id: int,
         return res
 
 
+def insert_surgery_user(begin_time: datetime,
+                        end_time: datetime,
+                        p_name: str,
+                        date: datetime,
+                        admission_number: int,
+                        department: str,
+                        s_name: str,
+                        chief_surgeon: str,
+                        associate_surgeon: str,
+                        instrument_nurse: list[dict],
+                        circulating_nurse: list[dict],
+                        instruments: list[dict],
+                        consumables: list[dict]):
+
+    chief_surgeon = get_user(name=chief_surgeon)[0]["u_id"]
+    associate_surgeon = get_user(name=associate_surgeon)[0]["u_id"]
+    instrument_nurse = list(filter(lambda x: x["is_selected"], instrument_nurse))
+    instrument_nurse = list(map(lambda x: x["value"], instrument_nurse))
+    circulating_nurse = list(filter(lambda x: x["is_selected"], circulating_nurse))
+    circulating_nurse = list(map(lambda x: x["value"], circulating_nurse))
+
+    def _revise_consumables(x):
+        c_id = get_newest_supply(n_limit=1, c_name=x["name"])[0]["c_id"]
+        update_supply_description(c_id, x["description"])
+        return c_id
+
+    def _revise_instruments(x):
+        revise_instrument(x["i_id"], x["times"] - 1)
+        return {"id": x["i_id"], "description": x["description"]}
+
+    consumables = list(map(lambda x: _revise_consumables(x), consumables))
+    instruments = list(map(lambda x: _revise_instruments(x), instruments))
+    department = DC_DEPARTMENT.get(department)
+    res = insert_surgery(begin_time=begin_time, date=date, admission_number=admission_number,
+                         end_time=end_time, department=department, s_name=s_name, p_name=p_name,
+                         chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
+                         instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse,
+                         instruments=instruments, consumables=consumables)
+
+    if res == "unsuccessful":
+        raise HTTPException(status_code=400, detail="Insert failed. Please check the input info.")
+    else:
+        return res
+
+
 def insert_surgery_admin(begin_time: datetime,
                          end_time: datetime,
                          p_name: str,
@@ -128,7 +174,7 @@ def insert_surgery_admin(begin_time: datetime,
                          instrument_nurse: list[str],
                          circulating_nurse: list[str],
                          instruments: list[dict],
-                         consumables: list[int]):
+                         consumables: list[dict]):
     # format every input parameter
     if department is not None:
         department = DC_DEPARTMENT.get(department)
@@ -157,4 +203,3 @@ def insert_surgery_admin(begin_time: datetime,
         raise HTTPException(status_code=400, detail="Insert failed. Please check the input info.")
     else:
         return res
-
