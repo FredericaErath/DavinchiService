@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 def get_filter(s_id: int = None,
                begin_time: datetime = None,
                end_time: datetime = None,
+               date: datetime = None,
                p_name: Union[str, list[str]] = None,
                admission_number: Union[int, list[int]] = None,
                department: Union[str, list[str]] = None,
@@ -28,6 +29,7 @@ def get_filter(s_id: int = None,
     :param s_id: surgery id
     :param begin_time: begin time
     :param end_time: end time
+    :param date: surgery date
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon
@@ -41,12 +43,20 @@ def get_filter(s_id: int = None,
     f = {}
     if s_id is not None:
         f["s_id"] = s_id
-    if begin_time is not None and end_time is None:
-        f["date"] = {"$gte": begin_time}
-    elif end_time is not None and begin_time is None:
-        f["date"] = {"$lt": end_time}
-    elif begin_time is not None and end_time is not None:
-        f["date"] = {"$lt": end_time, "$gte": begin_time}
+    if begin_time is not None or end_time is not None:
+        if date is not None:
+            log.error("date and begin_time, end_time shouldn't be present at the same time")
+        if begin_time is not None and end_time is None:
+            f["date"] = {"$gte": begin_time}
+        elif end_time is not None and begin_time is None:
+            f["date"] = {"$lt": end_time}
+        elif begin_time is not None and end_time is not None:
+            f["date"] = {"$lt": end_time, "$gte": begin_time}
+
+    if date is not None:
+        if begin_time is not None or end_time is not None:
+            log.error("date and begin_time, end_time shouldn't be present at the same time")
+        f["date"] = date
     if p_name is not None:
         if isinstance(p_name, int):
             f["p_name"] = p_name
@@ -102,6 +112,7 @@ def get_surgery(skip_size: int = None,
                 s_id: int = None,
                 begin_time: datetime = None,
                 end_time: datetime = None,
+                date: datetime = None,
                 p_name: Union[str, list[str]] = None,
                 admission_number: Union[int, list[int]] = None,
                 department: Union[str, list[str]] = None,
@@ -118,6 +129,7 @@ def get_surgery(skip_size: int = None,
     :param s_id: surgery id
     :param begin_time: begin time
     :param end_time: end time
+    :param date: surgery date
     :param p_name: patient's name
     :param admission_number: admission number
     :param department: department of chief surgeon
@@ -131,7 +143,7 @@ def get_surgery(skip_size: int = None,
     f = get_filter(s_id=s_id, p_name=p_name, admission_number=admission_number, department=department,
                    s_name=s_name, chief_surgeon=chief_surgeon, associate_surgeon=associate_surgeon,
                    instrument_nurse=instrument_nurse, circulating_nurse=circulating_nurse,
-                   begin_time=begin_time, end_time=end_time)
+                   begin_time=begin_time, end_time=end_time, date=date)
     if skip_size is not None and limit_size is not None:
         return list(surgery.find(f, {"_id": 0}).skip(skip_size).limit(limit_size))
     elif skip_size is None and limit_size is not None:
