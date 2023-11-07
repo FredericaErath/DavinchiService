@@ -164,4 +164,3 @@ def get_surgery_dashboard(begin_time: datetime = None, end_time: datetime = None
             "consumable_time_series": consumable_time_series,
             "consumable_acc_time_series": consumable_accident_time_series,
             "df_benefits": df_benefits.to_dict('records'), "sum_all": sum_all}
-

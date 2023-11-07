@@ -2,31 +2,55 @@ from datetime import datetime
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-from core.database import get_surgery, get_user
+from core.database import get_surgery, get_user, get_instrument, get_supply
 
 pd.set_option("display.max_columns", None)
 
-def get_surgery_by_surgeon(surgeon_id: str, begin_time: datetime = None, end_time: datetime = None):
-    """Get surgery by surgeon."""
+
+def get_general_data_by_month(surgeon_id: str, begin_time: datetime = None, end_time: datetime = None):
     if begin_time is None and end_time is None:
         # this month by default
         end_time = datetime.now()
         begin_time = end_time - relativedelta(month=1)
     surgery = get_surgery(chief_surgeon=surgeon_id, begin_time=begin_time, end_time=end_time)
-    return surgery
-
-
-def get_general_data_by_month(surgery: dict):
-    df = pd.DataFrame(surgery)[["s_id", "date", "begin_time", "end_time", "instruments", "consumables"]]
+    df = pd.DataFrame(surgery)[["s_id", "date", "begin_time", "end_time", "instruments", "consumables", "s_name"]]
     df["instrument_count"] = df.apply(lambda x: len(x["instruments"]), axis=1)
     df["consumable_count"] = df.apply(lambda x: len(x["consumables"]), axis=1)
-    return {"surgery_count": len(df),
-            "instrument_count": df["instrument_count"].sum(), "consumables_count": df["consumable_count"].sum()}
+    sur_count, ins_count, con_count = len(df), df["instrument_count"].sum(), df["consumable_count"].sum()
+
+    # get type percentage
+    surgery_type_count = df.groupby("s_name").count()["s_id"].reset_index().rename(columns={"s_name": "name",
+                                                                                            "s_id": "value"})
+    surgery_type_count["value"] = surgery_type_count["value"]
+    df_ins = df.explode("instruments").reset_index(drop=True)[["s_id", "instruments", "instrument_count"]]
+    df_con = df.explode("consumables").reset_index(drop=True)[["s_id", "consumables", "consumable_count"]]
+
+    def _get_instrument_type(x):
+        x["instruments"] = get_instrument(i_id=x["instruments"]["id"])[0]["i_name"]
+        return x
+
+    def _get_consumable_type(x):
+        x["consumables"] = get_supply(c_id=x["consumables"])[0]["c_name"]
+        return x
+
+    df_ins = df_ins.apply(lambda x: _get_instrument_type(x), axis=1)
+    df_con = df_con.apply(lambda x: _get_consumable_type(x), axis=1)
+    df_ins_count = df_ins.groupby("instruments").count()["s_id"].reset_index().rename(columns={"instruments": "name",
+                                                                                               "s_id": "value"})
+    df_con_count = df_con.groupby("consumables").count()["s_id"].reset_index().rename(columns={"consumables": "name",
+                                                                                               "s_id": "value"})
+    df_ins_count["value"] = df_ins_count["value"]
+    df_con_count["value"] = df_con_count["value"]
+
+    return {"surgery_count": sur_count, "instrument_count": ins_count, "consumables_count": con_count,
+            "ins_detail_count": df_ins_count.to_dict('records'), "con_detail_count": df_con_count.to_dict('records'),
+            "sur_detail_count": surgery_type_count.to_dict('records')}
 
 
-def get_surgery_time_series(surgeon_id: str, mode: str = None, ):
+def get_surgery_time_series(surgeon_id: str, mode: str = None):
     """
-    Get surgery time series.
+    Get surgery, instrument, consumables time series.
+
     :param surgeon_id: surgeon's user id
     :param mode: Year, month or day, year by default.
     :return: dict of time series
@@ -55,6 +79,7 @@ def get_surgery_time_series(surgeon_id: str, mode: str = None, ):
             df["time"] = df["date"].dt.date
 
         surgery_count = df.groupby("time").count()["s_id"].reset_index().rename(columns={"s_id": "s_count"})
+
         return surgery_count.to_dict('records')
     else:
         return []
@@ -103,22 +128,19 @@ def get_surgery_by_date(surgeon_id: str, date: datetime):
     df_surgery_count = df.groupby("chief_surgeon").count().rename(
         columns={"s_id": "s_count"})[["s_count"]].rank(method="min").reset_index()
     surgery_rank = df_surgery_count[
-                          df_surgery_count["chief_surgeon"] == surgeon_id].reset_index()["s_count"][0]
+        df_surgery_count["chief_surgeon"] == surgeon_id].reset_index()["s_count"][0]
     instrument_count = df.groupby("chief_surgeon")["instruments"].sum().rank(method="min").reset_index()
     instrument_rank = instrument_count[
-                          instrument_count["chief_surgeon"] == surgeon_id].reset_index()["instruments"][0]
+        instrument_count["chief_surgeon"] == surgeon_id].reset_index()["instruments"][0]
     consumables_count = df.groupby("chief_surgeon")["consumables"].sum().rank(method="min").reset_index()
     consumable_rank = consumables_count[
-                          consumables_count["chief_surgeon"] == surgeon_id].reset_index()["consumables"][
-                          0]
-    sur_percent = (len_users-surgery_rank)/len_users
-    ins_percent = (len_users-instrument_rank)/len_users
-    con_percent = (len_users-consumable_rank)/len_users
+        consumables_count["chief_surgeon"] == surgeon_id].reset_index()["consumables"][
+        0]
+    sur_percent = (len_users - surgery_rank) / len_users
+    ins_percent = (len_users - instrument_rank) / len_users
+    con_percent = (len_users - consumable_rank) / len_users
     df = df[df["chief_surgeon"] == surgeon_id]
     df["duration"] = df.apply(lambda x: x["end_time"] - x["begin_time"], axis=1)
     df = df.groupby("s_name")["duration"].sum().reset_index()
     return {"sur_percent": sur_percent, "ins_percent": ins_percent,
             "con_percent": con_percent, "duration": df.to_dict("records")}
-
-
-get_surgery_by_date("woshiyisheng", datetime(2023, 8, 29))
