@@ -4,8 +4,6 @@ from dateutil.relativedelta import relativedelta
 
 from core.database import get_surgery, get_user, get_instrument, get_supply
 
-pd.set_option("display.max_columns", None)
-
 
 def get_general_data_by_month(surgeon_id: str, begin_time: datetime = None, end_time: datetime = None):
     if begin_time is None and end_time is None:
