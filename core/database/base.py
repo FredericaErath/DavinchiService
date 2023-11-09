@@ -9,3 +9,4 @@ surgery = davinci_db.surgery
 user = davinci_db.user
 apparatus = davinci_db.apparatus
 supplies = davinci_db.supplies
+message = davinci_db.message
