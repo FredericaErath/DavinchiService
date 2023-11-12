@@ -182,7 +182,8 @@ def get_message(message: Message):
 
 @router.post("/update_message", tags=['Admin'])
 def update_message(message: Message):
-    return update_message_by_mid(m_id=message.m_id, status=message.status, priority=message.priority)
+    return update_message_by_mid(m_id=message.m_id, status=message.status,
+                                 priority=message.priority, feedback=message.feedback)
 
 
 @router.post("/delete_message", tags=['Admin'])

@@ -92,7 +92,7 @@ def get_contribution_matrix(surgeon_id):
     """Turn doctor's contribution into a 7*10 matrix"""
     # get begin_time and end_time
     end_time = datetime.now()
-    weekday = end_time.weekday() + 1
+    weekday = (end_time.weekday() + 1) % 7
     begin_time = end_time - relativedelta(days=weekday + 63)
 
     # get surgery count
@@ -176,5 +176,3 @@ def send_message(u_id: str, u_name: str, message: str):
         raise HTTPException(status_code=400, detail="Insert failure, please check your info.")
     else:
         return res
-
-

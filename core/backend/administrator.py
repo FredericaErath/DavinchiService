@@ -7,7 +7,7 @@ from typing import Union
 import pandas as pd
 from fastapi import HTTPException
 
-from constant import USER_DICT_REVERSE, USER_COLUMNS, STATUS, PRIORITY
+from constant import USER_DICT_REVERSE, USER_COLUMNS, STATUS, PRIORITY, STATUS_R, PRIORITY_R
 from core.database import get_user, delete_user, insert_users, USER_DICT, get_surgery
 from core.database.message import get_message, delete_message, update_message
 
@@ -45,18 +45,34 @@ def add_users_by_file(f_users: str):
         HTTPException(status_code=400, detail="Columns do not fit for restriction.")
 
 
-def get_message_by_filter(status: str = None,
-                          priority: str = None,
+def get_message_by_filter(status: Union[list[str], str] = None,
+                          priority: Union[list[str], str] = None,
                           begin_time: datetime = None,
                           end_time: datetime = None):
     if status:
-        status = STATUS.get(status)
+        if isinstance(status, str):
+            status = STATUS.get(status)
+        elif isinstance(status, list):
+            status = list(map(lambda x: STATUS.get(x), status))
+        else:
+            raise HTTPException(status_code=400, detail="Something went wrong, please check status.")
     if priority:
-        priority = PRIORITY.get(priority)
+        if isinstance(priority, str):
+            priority = PRIORITY.get(priority)
+        elif isinstance(priority, list):
+            priority = list(map(lambda x: PRIORITY.get(x), priority))
+        else:
+            raise HTTPException(status_code=400, detail="Something went wrong, please check priority.")
     res = get_message(status=status, priority=priority, begin_time=begin_time, end_time=end_time)
     if len(res) == 0:
         return []
     else:
+        def _format_message(x):
+            x["status"] = STATUS_R.get(x["status"])
+            x["priority"] = PRIORITY_R.get(x["priority"])
+            x["insert_time"] = x["insert_time"].strftime("%Y-%m-%d %H:%M:%S")
+            return x
+        res = list(map(lambda x: _format_message(x), res))
         return res
 
 
@@ -68,14 +84,13 @@ def delete_message_by_mid(m_id: int):
         return res
 
 
-def update_message_by_mid(m_id: int, status: str = None, priority: str = None):
+def update_message_by_mid(m_id: int, status: str = None, priority: str = None, feedback: str = None):
     if status:
         status = STATUS.get(status)
     if priority:
         priority = PRIORITY.get(priority)
-    res = update_message(m_id=m_id, status=status, priority=priority)
+    res = update_message(m_id=m_id, status=status, priority=priority, feedback=feedback)
     if res == "unsuccessful":
         raise HTTPException(status_code=400, detail="Something went wrong, please check m_id.")
     else:
         return res
-

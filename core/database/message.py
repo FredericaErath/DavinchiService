@@ -11,8 +11,8 @@ log = logging.getLogger(__name__)
 
 
 def get_filter(m_id: Union[int, list] = None,
-               status: int = None,
-               priority: int = None,
+               status: Union[list[int], int] = None,
+               priority: Union[list[int], int] = None,
                u_id: str = None,
                u_name: str = None,
                time: datetime = None,
@@ -32,7 +32,7 @@ def get_filter(m_id: Union[int, list] = None,
     :return: filter
     """
     f = {}
-    if m_id:
+    if m_id is not None:
         if isinstance(m_id, int):
             f["m_id"] = m_id
         elif isinstance(m_id, list):
@@ -40,16 +40,26 @@ def get_filter(m_id: Union[int, list] = None,
         else:
             log.error("m_id should be either str or list")
     if status:
-        f["status"] = status
+        if isinstance(status, int):
+            f["status"] = status
+        elif isinstance(status, list):
+            f["status"] = {"$in": status}
+        else:
+            log.error("status should be either str or list")
     if priority:
-        f["priority"] = priority
+        if isinstance(priority, int):
+            f["priority"] = priority
+        elif isinstance(priority, list):
+            f["priority"] = {"$in": priority}
+        else:
+            log.error("priority should be either str or list")
     if begin_time and not end_time:
         f["insert_time"] = {"$gte": begin_time}
     if end_time and not begin_time:
         f["insert_time"] = {"$lt": end_time}
     if begin_time and not end_time:
         f["insert_time"] = {"$lt": end_time, "$gte": begin_time}
-    if u_id:
+    if u_id is not None:
         f["u_id"] = u_id
     if u_name:
         f["u_name"] = u_name
@@ -59,8 +69,8 @@ def get_filter(m_id: Union[int, list] = None,
 
 
 def get_message(m_id: int = None,
-                status: int = None,
-                priority: int = None,
+                status: Union[list[int], int] = None,
+                priority: Union[list[int], int] = None,
                 u_id: str = None,
                 u_name: str = None,
                 time: datetime = None,
@@ -95,7 +105,7 @@ def insert_message(u_id: str, u_name: str, content: str):
     else:
         m_id = last_m_id[0]["m_id"] + 1
 
-    insert_doc = dict(m_id=m_id, status=0, priority=0,
+    insert_doc = dict(m_id=m_id, status=1, priority=1, feedback="NULL",
                       u_id=u_id, u_name=u_name, insert_time=datetime.utcnow(), content=content)
     try:
         message.insert_one(insert_doc)
@@ -106,8 +116,8 @@ def insert_message(u_id: str, u_name: str, content: str):
 
 
 def delete_message(m_id: Union[int, list] = None,
-                   status: int = None,
-                   priority: int = None,
+                   status: Union[list[int], int] = None,
+                   priority: Union[list[int], int] = None,
                    u_id: str = None,
                    u_name: str = None,
                    time: datetime = None,
@@ -136,13 +146,14 @@ def delete_message(m_id: Union[int, list] = None,
         return "unsuccessful"
 
 
-def update_message(m_id: int, status: int = None, priority: int = None):
+def update_message(m_id: int, status: int = None, priority: int = None, feedback: str = None):
     """
     Update message.
 
     :param m_id: message id
     :param status: status of the message, {0: unreviewed, 1: pending, 2: done}
     :param priority: priority of the message, {0: unimportant, 1: normal, 2: important}
+    :param feedback: feedback from administrator
     :return: update message
     """
     f = get_filter(m_id=m_id)
@@ -151,10 +162,11 @@ def update_message(m_id: int, status: int = None, priority: int = None):
         new_value["status"] = status
     if priority:
         new_value["priority"] = priority
+    if feedback:
+        new_value["feedback"] = feedback
     try:
         message.update_many(f, {"$set": new_value})
         return "successful"
     except Exception as e:
         log.error(f"mongodb update operation in apparatus collection failed and raise the following exception: {e}")
         return "unsuccessful"
-
