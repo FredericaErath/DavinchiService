@@ -14,8 +14,10 @@ class Doctor(BaseModel):
 
 
 class Message(BaseModel):
-    m_id: int
+    m_id: Optional[int] = None
     status: Optional[str] = None
     priority: Optional[str] = None
+    begin_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
 
 

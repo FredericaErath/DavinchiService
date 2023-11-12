@@ -5,7 +5,8 @@ from fastapi import APIRouter, UploadFile
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTasks
 
-from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users, update_message_by_mid
+from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users, update_message_by_mid, \
+    get_message_by_filter, delete_message_by_mid
 from core.backend.dashboard import get_surgery_dashboard, get_doctor_contribution
 from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, add_one_instrument, \
     download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
@@ -173,6 +174,20 @@ def get_doctor_contribution_api(contribution: Contribution):
     return get_doctor_contribution(df=contribution.df, name=contribution.name)
 
 
-@router.post("/get_doctor_contribution", tags=['Admin'])
-def get_doctor_contribution_api(message: Message):
+@router.post("/get_message", tags=['Admin'])
+def get_message(message: Message):
+    return get_message_by_filter(status=message.status, priority=message.priority,
+                                 begin_time=message.begin_time, end_time=message.end_time)
+
+
+@router.post("/update_message", tags=['Admin'])
+def update_message(message: Message):
     return update_message_by_mid(m_id=message.m_id, status=message.status, priority=message.priority)
+
+
+@router.post("/delete_message", tags=['Admin'])
+def delete_message(message: Message):
+    return delete_message_by_mid(m_id=message.m_id)
+
+
+
