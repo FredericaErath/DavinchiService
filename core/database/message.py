@@ -3,13 +3,17 @@ CURD functions for message document
 """
 import logging
 from datetime import datetime
+from typing import Union
 
 from core.database.base import message
 
 log = logging.getLogger(__name__)
 
 
-def get_filter(u_id: str = None,
+def get_filter(m_id: Union[int, list] = None,
+               status: int = None,
+               priority: int = None,
+               u_id: str = None,
                u_name: str = None,
                time: datetime = None,
                begin_time: datetime = None,
@@ -17,6 +21,9 @@ def get_filter(u_id: str = None,
     """
     Get message filter.
 
+    :param m_id: message id
+    :param status: status of the message, {0: unreviewed, 1: pending, 2: done}
+    :param priority: priority of the message, {0: unimportant, 1: normal, 2: important}
     :param u_id: user's id who send the message.
     :param u_name: user's name who send the message.
     :param time: sending time
@@ -25,6 +32,17 @@ def get_filter(u_id: str = None,
     :return: filter
     """
     f = {}
+    if m_id:
+        if isinstance(m_id, int):
+            f["m_id"] = m_id
+        elif isinstance(m_id, list):
+            f["m_id"] = {"$in": m_id}
+        else:
+            log.error("m_id should be either str or list")
+    if status:
+        f["status"] = status
+    if priority:
+        f["priority"] = priority
     if begin_time and not end_time:
         f["insert_time"] = {"$gte": begin_time}
     if end_time and not begin_time:
@@ -40,7 +58,10 @@ def get_filter(u_id: str = None,
     return f
 
 
-def get_message(u_id: str = None,
+def get_message(m_id: int = None,
+                status: int = None,
+                priority: int = None,
+                u_id: str = None,
                 u_name: str = None,
                 time: datetime = None,
                 begin_time: datetime = None,
@@ -48,6 +69,9 @@ def get_message(u_id: str = None,
     """
     Get message.
 
+    :param m_id: message id
+    :param status: status of the message, {0: unreviewed, 1: pending, 2: done}
+    :param priority: priority of the message, {0: unimportant, 1: normal, 2: important}
     :param u_id: user's id who send the message.
     :param u_name: user's name who send the message.
     :param time: sending time
@@ -55,7 +79,8 @@ def get_message(u_id: str = None,
     :param end_time: end time
     :return: message
     """
-    f = get_filter(u_id=u_id, u_name=u_name, time=time, begin_time=begin_time, end_time=end_time)
+    f = get_filter(m_id=m_id, status=status, priority=priority,
+                   u_id=u_id, u_name=u_name, time=time, begin_time=begin_time, end_time=end_time)
     return list(message.find(f, {"_id": 0}))
 
 
@@ -63,7 +88,15 @@ def insert_message(u_id: str, u_name: str, content: str):
     """
     Insert message.
     """
-    insert_doc = dict(u_id=u_id, u_name=u_name, insert_time=datetime.utcnow(), content=content)
+    last_m_id = list(message.find().sort([('m_id', -1)]).limit(1))
+    # get last message id
+    if len(last_m_id) == 0:
+        m_id = 0
+    else:
+        m_id = last_m_id[0]["m_id"] + 1
+
+    insert_doc = dict(m_id=m_id, status=0, priority=0,
+                      u_id=u_id, u_name=u_name, insert_time=datetime.utcnow(), content=content)
     try:
         message.insert_one(insert_doc)
         return "successful"
@@ -72,7 +105,10 @@ def insert_message(u_id: str, u_name: str, content: str):
         return "unsuccessful"
 
 
-def delete_message(u_id: str = None,
+def delete_message(m_id: Union[int, list] = None,
+                   status: int = None,
+                   priority: int = None,
+                   u_id: str = None,
                    u_name: str = None,
                    time: datetime = None,
                    begin_time: datetime = None,
@@ -80,6 +116,9 @@ def delete_message(u_id: str = None,
     """
     Delete message.
 
+    :param m_id: message id
+    :param status: status of the message, {0: unreviewed, 1: pending, 2: done}
+    :param priority: priority of the message, {0: unimportant, 1: normal, 2: important}
     :param u_id: user's id who send the message.
     :param u_name: user's name who send the message.
     :param time: sending time
@@ -87,10 +126,35 @@ def delete_message(u_id: str = None,
     :param end_time: end time
     :return: delete operation message.
     """
-    f = get_filter(u_id=u_id, u_name=u_name, time=time, begin_time=begin_time, end_time=end_time)
+    f = get_filter(m_id=m_id, status=status, priority=priority,
+                   u_id=u_id, u_name=u_name, time=time, begin_time=begin_time, end_time=end_time)
     try:
         message.delete_many(f)
         return "successful"
     except Exception as e:
         log.error(f"mongodb delete operation in user collection failed and raise the following exception: {e}")
         return "unsuccessful"
+
+
+def update_message(m_id: int, status: int = None, priority: int = None):
+    """
+    Update message.
+
+    :param m_id: message id
+    :param status: status of the message, {0: unreviewed, 1: pending, 2: done}
+    :param priority: priority of the message, {0: unimportant, 1: normal, 2: important}
+    :return: update message
+    """
+    f = get_filter(m_id=m_id)
+    new_value = {}
+    if status:
+        new_value["status"] = status
+    if priority:
+        new_value["priority"] = priority
+    try:
+        message.update_many(f, {"$set": new_value})
+        return "successful"
+    except Exception as e:
+        log.error(f"mongodb update operation in apparatus collection failed and raise the following exception: {e}")
+        return "unsuccessful"
+

@@ -5,13 +5,14 @@ from fastapi import APIRouter, UploadFile
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTasks
 
-from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users
+from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users, update_message_by_mid
 from core.backend.dashboard import get_surgery_dashboard, get_doctor_contribution
 from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, add_one_instrument, \
     download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
 from core.backend.supply import get_supply_general, insert_supplies, delete_supply_by_id, update_supply_description
 from core.backend.surgery import get_surgery_by_tds, update_surgery_info, insert_surgery_admin, insert_surgery_user
 from core.backend.user import register, revise_user_info
+from model.doctor import Doctor, Message
 from model.instrument import Instrument
 from model.surgery import SurgeryGet, SurgeryUpdate, Contribution
 from model.supply import Supply, SupplyGet, SupplyRevise
@@ -170,3 +171,8 @@ def get_surgery_dashboard_api(supply: Supply):
 @router.post("/get_doctor_contribution", tags=['Admin'])
 def get_doctor_contribution_api(contribution: Contribution):
     return get_doctor_contribution(df=contribution.df, name=contribution.name)
+
+
+@router.post("/get_doctor_contribution", tags=['Admin'])
+def get_doctor_contribution_api(message: Message):
+    return update_message_by_mid(m_id=message.m_id, status=message.status, priority=message.priority)

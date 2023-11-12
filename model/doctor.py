@@ -13,3 +13,9 @@ class Doctor(BaseModel):
     date: Optional[datetime] = None
 
 
+class Message(BaseModel):
+    m_id: int
+    status: Optional[str] = None
+    priority: Optional[str] = None
+
+

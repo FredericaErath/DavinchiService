@@ -177,3 +177,4 @@ def send_message(u_id: str, u_name: str, message: str):
     else:
         return res
 
+

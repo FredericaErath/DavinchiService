@@ -7,8 +7,9 @@ from typing import Union
 import pandas as pd
 from fastapi import HTTPException
 
-from constant import USER_DICT_REVERSE, USER_COLUMNS
+from constant import USER_DICT_REVERSE, USER_COLUMNS, STATUS, PRIORITY
 from core.database import get_user, delete_user, insert_users, USER_DICT, get_surgery
+from core.database.message import get_message, delete_message, update_message
 
 
 def get_users(u_id: Union[str, list[str]] = None,
@@ -42,4 +43,39 @@ def add_users_by_file(f_users: str):
         return insert_users(df.to_dict('records'))
     else:
         HTTPException(status_code=400, detail="Columns do not fit for restriction.")
+
+
+def get_message_by_filter(status: str = None,
+                          priority: str = None,
+                          begin_time: datetime = None,
+                          end_time: datetime = None):
+    if status:
+        status = STATUS.get(status)
+    if priority:
+        priority = PRIORITY.get(priority)
+    res = get_message(status=status, priority=priority, begin_time=begin_time, end_time=end_time)
+    if len(res) == 0:
+        return []
+    else:
+        return res
+
+
+def delete_message_by_mid(m_id: int):
+    res = delete_message(m_id=m_id)
+    if res == "unsuccessful":
+        raise HTTPException(status_code=400, detail="Something went wrong, please check m_id.")
+    else:
+        return res
+
+
+def update_message_by_mid(m_id: int, status: str = None, priority: str = None):
+    if status:
+        status = STATUS.get(status)
+    if priority:
+        priority = PRIORITY.get(priority)
+    res = update_message(m_id=m_id, status=status, priority=priority)
+    if res == "unsuccessful":
+        raise HTTPException(status_code=400, detail="Something went wrong, please check m_id.")
+    else:
+        return res
 
