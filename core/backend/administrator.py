@@ -8,7 +8,7 @@ import pandas as pd
 from fastapi import HTTPException
 
 from constant import USER_DICT_REVERSE, USER_COLUMNS, STATUS, PRIORITY, STATUS_R, PRIORITY_R
-from core.database import get_user, delete_user, insert_users, USER_DICT, get_surgery
+from core.database import get_user, delete_user, insert_users, USER_DICT
 from core.database.message import get_message, delete_message, update_message
 
 
@@ -48,7 +48,8 @@ def add_users_by_file(f_users: str):
 def get_message_by_filter(status: Union[list[str], str] = None,
                           priority: Union[list[str], str] = None,
                           begin_time: datetime = None,
-                          end_time: datetime = None):
+                          end_time: datetime = None,
+                          u_id: str = None):
     if status:
         if isinstance(status, str):
             status = STATUS.get(status)
@@ -63,7 +64,7 @@ def get_message_by_filter(status: Union[list[str], str] = None,
             priority = list(map(lambda x: PRIORITY.get(x), priority))
         else:
             raise HTTPException(status_code=400, detail="Something went wrong, please check priority.")
-    res = get_message(status=status, priority=priority, begin_time=begin_time, end_time=end_time)
+    res = get_message(status=status, priority=priority, begin_time=begin_time, end_time=end_time, u_id=u_id)
     if len(res) == 0:
         return []
     else:
@@ -72,6 +73,7 @@ def get_message_by_filter(status: Union[list[str], str] = None,
             x["priority"] = PRIORITY_R.get(x["priority"])
             x["insert_time"] = x["insert_time"].strftime("%Y-%m-%d %H:%M:%S")
             return x
+
         res = list(map(lambda x: _format_message(x), res))
         return res
 

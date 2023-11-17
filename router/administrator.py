@@ -7,13 +7,13 @@ from starlette.background import BackgroundTasks
 
 from core.backend.administrator import delete_user_by_uid, add_users_by_file, get_users, update_message_by_mid, \
     get_message_by_filter, delete_message_by_mid
-from core.backend.dashboard import get_surgery_dashboard, get_doctor_contribution
-from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, add_one_instrument, \
-    download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
+from core.backend.dashboard import get_surgery_dashboard, get_doctor_contribution, get_general_data
+from core.backend.instrument import get_all_instrument, revise_instrument, add_instruments_by_file, \
+    add_one_instrument, download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
 from core.backend.supply import get_supply_general, insert_supplies, delete_supply_by_id, update_supply_description
-from core.backend.surgery import get_surgery_by_tds, update_surgery_info, insert_surgery_admin, insert_surgery_user
+from core.backend.surgery import get_surgery_by_tds, update_surgery_info, insert_surgery_admin
 from core.backend.user import register, revise_user_info
-from model.doctor import Doctor, Message
+from model.doctor import Message
 from model.instrument import Instrument
 from model.surgery import SurgeryGet, SurgeryUpdate, Contribution
 from model.supply import Supply, SupplyGet, SupplyRevise
@@ -191,4 +191,6 @@ def delete_message(message: Message):
     return delete_message_by_mid(m_id=message.m_id)
 
 
-
+@router.post("/get_general_data", tags=['Admin'])
+def delete_message():
+    return get_general_data()

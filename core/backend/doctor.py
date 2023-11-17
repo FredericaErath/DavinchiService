@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 
 from core.database import get_surgery, get_user, get_instrument, get_supply
-from core.database.message import insert_message
+from core.database.message import insert_message, get_message
 
 
 def get_general_data_by_month(surgeon_id: str, begin_time: datetime = None, end_time: datetime = None):
@@ -92,11 +92,22 @@ def get_contribution_matrix(surgeon_id):
     """Turn doctor's contribution into a 7*10 matrix"""
     # get begin_time and end_time
     end_time = datetime.now()
+    month = end_time.strftime('%Y年%m月')
     weekday = (end_time.weekday() + 1) % 7
     begin_time = end_time - relativedelta(days=weekday + 63)
 
     # get surgery count
     df = pd.DataFrame(get_surgery(chief_surgeon=surgeon_id, begin_time=begin_time, end_time=end_time))[["s_id", "date"]]
+    df_month = pd.DataFrame(get_surgery(chief_surgeon=surgeon_id, end_time=end_time,
+                                        begin_time=end_time.replace(day=1, hour=0, minute=0, second=0)))
+
+    if len(df_month) == 0:
+        hours = 0
+    else:
+        df_month = df_month[["s_id", "begin_time", "end_time"]]
+        df_month["hours"] = df_month["end_time"] - df_month["begin_time"]
+        hours = df_month["hours"].sum().seconds/3600
+
     end_time = end_time.strftime('%Y%m%d')
     begin_time = begin_time.strftime('%Y%m%d')
     df = df.groupby("date").count().reset_index().rename(columns={"s_id": "s_count"})
@@ -119,7 +130,7 @@ def get_contribution_matrix(surgeon_id):
             # the last week
             matrix[i] = list(map(lambda x: [int(x)],
                                  df_time[i * 7:].tolist())) + list(map(lambda x: [int(x)], matrix[i][weekday - 7 + 1:]))
-    return matrix
+    return {"matrix": matrix, "month": month, "hours": "%.1f" % hours}
 
 
 def get_surgery_by_date(surgeon_id: str, date: datetime = None):
@@ -175,4 +186,20 @@ def send_message(u_id: str, u_name: str, message: str):
     if res == "unsuccessful":
         raise HTTPException(status_code=400, detail="Insert failure, please check your info.")
     else:
+        return res
+
+
+def get_message_by_uid(u_id: str):
+    """
+    Get message sent from user.
+    """
+    res = get_message(u_id=u_id)
+    if len(res) == 0:
+        return []
+    else:
+        def _format_message(x):
+            x["status"] = x["status"]-1
+            x["insert_time"] = x["insert_time"].strftime("%Y-%m-%d %H:%M:%S")
+            return x
+        res = list(map(lambda x: _format_message(x), res))
         return res

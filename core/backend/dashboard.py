@@ -4,6 +4,8 @@ from dateutil.relativedelta import relativedelta
 
 from constant import PRICE_MAP
 from core.backend.surgery import get_surgery_by_tds
+from core.database import user, surgery, apparatus, supplies
+from core.database.message import get_message
 
 
 def get_detail_count(df, name: str):
@@ -164,3 +166,32 @@ def get_surgery_dashboard(begin_time: datetime = None, end_time: datetime = None
             "consumable_time_series": consumable_time_series,
             "consumable_acc_time_series": consumable_accident_time_series,
             "df_benefits": df_benefits.to_dict('records'), "sum_all": sum_all}
+
+
+def get_general_data():
+    """
+    Count collection lengths of users, surgery, apparatus, supply
+    :return: dict of lengths of collections
+    """
+    users = user.count_documents({})
+    surgeries = surgery.count_documents({})
+    instrument = apparatus.count_documents({})
+    consumable = supplies.count_documents({})
+    end_time = datetime.now().replace(month=9)
+    begin_time = end_time.replace(day=1, hour=0, minute=0, second=0)
+    df = pd.DataFrame(get_surgery_by_tds(begin_time=begin_time, end_time=end_time))
+    if len(df) != 0:
+        df, sum_all = get_benefit_analysis(df)
+    else:
+        sum_all = 0
+    message = pd.DataFrame(get_message(begin_time=begin_time, end_time=end_time))
+    if len(message) != 0:
+        unhandled_message = len(message[message["status"] == 1]) / len(message) * 100
+        message = str(len(message)) + '条'
+    else:
+        message = "本月无消息"
+        unhandled_message = 0
+    return {"users": str(users), "surgery": str(surgeries), "instrument": str(instrument),
+            "consumable": str(consumable), "cost": sum_all["total_cost"], "message": message,
+            "unhandled_message": unhandled_message}
+

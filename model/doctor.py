@@ -14,6 +14,7 @@ class Doctor(BaseModel):
 
 
 class Message(BaseModel):
+    u_id: Optional[str] = None
     m_id: Optional[int] = None
     status: Optional[Union[str, list[str]]] = None
     priority: Optional[Union[str, list[str]]] = None
