@@ -4,9 +4,10 @@ Generic functions for all users
 from typing import Optional
 
 from fastapi import HTTPException
+
+from constant import USER_DICT
 from core.database import update_user, get_user, insert_user
 from core.backend.auth import AuthHandler
-
 
 auth = AuthHandler()
 
@@ -50,10 +51,12 @@ def register(u_id: str, name: str, user_type: str, pwd: str):
     return insert_user(u_id=u_id, name=name, user_type=user_type, code=hashed_pwd)
 
 
-def login(u_id: str, pwd: str):
+def login(u_id: str, pwd: str, user_type: str = None):
     """User login."""
     try:
         user = get_user(u_id=u_id)[0]
+        if user["user_type"] != USER_DICT.get(user_type):
+            raise HTTPException(status_code=401, detail="Invalid usertype")
     except IndexError:
         raise HTTPException(status_code=401, detail="Invalid userid")
     if auth.verify_pwd(pwd, user["code"]) is False:
@@ -61,4 +64,3 @@ def login(u_id: str, pwd: str):
     else:
         token = auth.encode_token(user_id=u_id)
         return {"token": token, "user_type": user["user_type"], "name": user["name"], "u_id": user["u_id"]}
-

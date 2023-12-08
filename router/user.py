@@ -6,8 +6,8 @@ router = APIRouter()
 
 
 @router.post('/login', tags=["User"])
-def login_api(user: User):
-    return login(u_id=user.u_id, pwd=user.pwd)
+def admin_login(user: User):
+    return login(u_id=user.u_id, user_type=user.user_type, pwd=user.pwd)
 
 
 @router.post('/register', tags=["User"])

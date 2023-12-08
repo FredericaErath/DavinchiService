@@ -177,11 +177,15 @@ def get_general_data():
     surgeries = surgery.count_documents({})
     instrument = apparatus.count_documents({})
     consumable = supplies.count_documents({})
-    end_time = datetime.now().replace(month=9)
+    end_time = datetime.now()
     begin_time = end_time.replace(day=1, hour=0, minute=0, second=0)
     df = pd.DataFrame(get_surgery_by_tds(begin_time=begin_time, end_time=end_time))
     if len(df) != 0:
         df, sum_all = get_benefit_analysis(df)
+        if len(sum_all) != 0:
+            sum_all = sum_all["total_cost"]
+        else:
+            sum_all = 0
     else:
         sum_all = 0
     message = pd.DataFrame(get_message(begin_time=begin_time, end_time=end_time))
@@ -192,6 +196,6 @@ def get_general_data():
         message = "本月无消息"
         unhandled_message = 0
     return {"users": str(users), "surgery": str(surgeries), "instrument": str(instrument),
-            "consumable": str(consumable), "cost": sum_all["total_cost"], "message": message,
+            "consumable": str(consumable), "cost": sum_all, "message": message,
             "unhandled_message": unhandled_message}
 

@@ -1,7 +1,7 @@
 import os
 from typing import Union
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Depends
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTasks
 
@@ -12,7 +12,7 @@ from core.backend.instrument import get_all_instrument, revise_instrument, add_i
     add_one_instrument, download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
 from core.backend.supply import get_supply_general, insert_supplies, delete_supply_by_id, update_supply_description
 from core.backend.surgery import get_surgery_by_tds, update_surgery_info, insert_surgery_admin
-from core.backend.user import register, revise_user_info
+from core.backend.user import register, revise_user_info, login, auth
 from model.doctor import Message
 from model.instrument import Instrument
 from model.surgery import SurgeryGet, SurgeryUpdate, Contribution
@@ -32,7 +32,7 @@ def revise_user(user: User):
     return revise_user_info(u_id=user.u_id, pwd=user.pwd, name=user.name, new_u_id=user.new_id)
 
 
-@router.post('/get_user', tags=['Admin'])
+@router.post('/get_user', tags=['Admin'], dependencies=[Depends(auth.decode_token)])
 def get_users_api(user: User):
     return get_users(u_id=user.u_id, user_type=user.user_type, name=user.name)
 
@@ -55,12 +55,12 @@ async def upload_users(file: UploadFile):
     return res
 
 
-@router.get("/get_instruments", tags=['Admin'])
+@router.get("/get_instruments", tags=['Admin'], dependencies=[Depends(auth.decode_token)])
 def get_instrument_api():
     return get_all_instrument()
 
 
-@router.post("/get_specific_instruments", tags=['Admin'])
+@router.post("/get_specific_instruments", tags=['Admin'], dependencies=[Depends(auth.decode_token)])
 def get_instrument(instrument: Instrument):
     return get_instrument_general(begin_time=instrument.begin_time, end_time=instrument.end_time,
                                   times=instrument.times, i_id=instrument.i_id,
@@ -103,11 +103,11 @@ def delete_instruments(instrument: Instrument):
 def download_qrcode(instrument: Instrument):
     res = download_instrument_qr_code(i_id=instrument.i_id)
     response = FileResponse(res, filename=f"{str(instrument.i_id)}.png", headers={"Access-Control-Expose-Headers":
-                                                                                      "content-disposition"})
+                                                                                  "content-disposition"})
     return response
 
 
-@router.post('/get_surgery', tags=['Admin'])
+@router.post('/get_surgery', tags=['Admin'], dependencies=[Depends(auth.decode_token)])
 def get_surgery_api(surgery: Union[SurgeryGet, None]):
     return get_surgery_by_tds(page=surgery.page, limit_size=surgery.limit_size,
                               begin_time=surgery.begin_time, end_time=surgery.end_time,
@@ -191,6 +191,6 @@ def delete_message(message: Message):
     return delete_message_by_mid(m_id=message.m_id)
 
 
-@router.post("/get_general_data", tags=['Admin'])
-def delete_message():
+@router.post("/get_general_data", tags=['Admin'], dependencies=[Depends(auth.decode_token)])
+def get_general():
     return get_general_data()

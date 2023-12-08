@@ -1,6 +1,7 @@
 """
 Authority handler. Use jwt verification.
 """
+import os
 from typing import Optional
 
 from jose import jwt
@@ -13,7 +14,7 @@ from datetime import datetime, timedelta
 class AuthHandler:
     security = HTTPBearer()
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    secret = 'SECRET'
+    secret = os.environ['JWT_SECRET_KEY']
 
     def get_pwd_hash(self, pwd):
         return self.pwd_context.hash(pwd)
@@ -24,7 +25,7 @@ class AuthHandler:
     def encode_token(self, user_id):
         """Generate jwt."""
         payload = {
-            'exp': datetime.utcnow() + timedelta(days=0, minutes=5),
+            'exp': datetime.utcnow() + timedelta(days=15),
             'iat': datetime.utcnow(),
             'sub': user_id
         }
