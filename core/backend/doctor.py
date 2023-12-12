@@ -97,39 +97,44 @@ def get_contribution_matrix(surgeon_id):
     begin_time = end_time - relativedelta(days=weekday + 63)
 
     # get surgery count
-    df = pd.DataFrame(get_surgery(chief_surgeon=surgeon_id, begin_time=begin_time, end_time=end_time))[["s_id", "date"]]
-    df_month = pd.DataFrame(get_surgery(chief_surgeon=surgeon_id, end_time=end_time,
-                                        begin_time=end_time.replace(day=1, hour=0, minute=0, second=0)))
-
-    if len(df_month) == 0:
+    df = pd.DataFrame(get_surgery(chief_surgeon=surgeon_id, begin_time=begin_time, end_time=end_time))
+    if len(df) == 0:
+        matrix = [[0]*10 for _ in range(10)]
         hours = 0
     else:
-        df_month = df_month[["s_id", "begin_time", "end_time"]]
-        df_month["hours"] = df_month["end_time"] - df_month["begin_time"]
-        hours = df_month["hours"].sum().seconds/3600
+        df = df[["s_id", "date"]]
+        df_month = pd.DataFrame(get_surgery(chief_surgeon=surgeon_id, end_time=end_time,
+                                            begin_time=end_time.replace(day=1, hour=0, minute=0, second=0)))
 
-    end_time = end_time.strftime('%Y%m%d')
-    begin_time = begin_time.strftime('%Y%m%d')
-    df = df.groupby("date").count().reset_index().rename(columns={"s_id": "s_count"})
-    df["date"] = df["date"].dt.strftime('%Y-%m-%d')
-
-    # initialize matrix
-    matrix = [[0] * 7 for _ in range(10)]
-    dates = pd.date_range(begin_time, end_time, freq='1D')
-    df_time = pd.DataFrame(dates).rename(columns={0: "date"})
-    df_time["date"] = df_time["date"].dt.strftime('%Y-%m-%d')
-    # merge
-    df_time = df_time.merge(df, on="date", how="left", validate="1:1").fillna(value=0)
-    df_time = df_time["s_count"].values
-
-    # fill the matrix
-    for i in range(10):
-        if i < 9:
-            matrix[i] = list(map(lambda x: [int(x)], df_time[i * 7: (i + 1) * 7].tolist()))
+        if len(df_month) == 0:
+            hours = 0
         else:
-            # the last week
-            matrix[i] = list(map(lambda x: [int(x)],
-                                 df_time[i * 7:].tolist())) + list(map(lambda x: [int(x)], matrix[i][weekday - 7 + 1:]))
+            df_month = df_month[["s_id", "begin_time", "end_time"]]
+            df_month["hours"] = df_month["end_time"] - df_month["begin_time"]
+            hours = df_month["hours"].sum().seconds/3600
+
+        end_time = end_time.strftime('%Y%m%d')
+        begin_time = begin_time.strftime('%Y%m%d')
+        df = df.groupby("date").count().reset_index().rename(columns={"s_id": "s_count"})
+        df["date"] = df["date"].dt.strftime('%Y-%m-%d')
+
+        # initialize matrix
+        matrix = [[0] * 7 for _ in range(10)]
+        dates = pd.date_range(begin_time, end_time, freq='1D')
+        df_time = pd.DataFrame(dates).rename(columns={0: "date"})
+        df_time["date"] = df_time["date"].dt.strftime('%Y-%m-%d')
+        # merge
+        df_time = df_time.merge(df, on="date", how="left", validate="1:1").fillna(value=0)
+        df_time = df_time["s_count"].values
+
+        # fill the matrix
+        for i in range(10):
+            if i < 9:
+                matrix[i] = list(map(lambda x: [int(x)], df_time[i * 7: (i + 1) * 7].tolist()))
+            else:
+                # the last week
+                matrix[i] = list(map(lambda x: [int(x)],
+                                     df_time[i * 7:].tolist())) + list(map(lambda x: [int(x)], matrix[i][weekday - 7 + 1:]))
     return {"matrix": matrix, "month": month, "hours": "%.1f" % hours}
 
 

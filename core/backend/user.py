@@ -51,12 +51,10 @@ def register(u_id: str, name: str, user_type: str, pwd: str):
     return insert_user(u_id=u_id, name=name, user_type=user_type, code=hashed_pwd)
 
 
-def login(u_id: str, pwd: str, user_type: str = None):
+def login(u_id: str, pwd: str):
     """User login."""
     try:
         user = get_user(u_id=u_id)[0]
-        if user["user_type"] != USER_DICT.get(user_type):
-            raise HTTPException(status_code=401, detail="Invalid usertype")
     except IndexError:
         raise HTTPException(status_code=401, detail="Invalid userid")
     if auth.verify_pwd(pwd, user["code"]) is False:
