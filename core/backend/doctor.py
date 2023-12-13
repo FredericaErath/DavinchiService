@@ -17,37 +17,44 @@ def get_general_data_by_month(surgeon_id: str, begin_time: datetime = None, end_
         begin_time = end_time - relativedelta(month=1)
     surgery = get_surgery(chief_surgeon=surgeon_id, begin_time=begin_time, end_time=end_time)
     df = pd.DataFrame(surgery)[["s_id", "date", "begin_time", "end_time", "instruments", "consumables", "s_name"]]
-    df["instrument_count"] = df.apply(lambda x: len(x["instruments"]), axis=1)
-    df["consumable_count"] = df.apply(lambda x: len(x["consumables"]), axis=1)
-    sur_count, ins_count, con_count = len(df), df["instrument_count"].sum(), df["consumable_count"].sum()
+    if len(df) == 0:
+        return {"surgery_count": 0, "instrument_count": 0, "consumables_count": 0,
+                "ins_detail_count": [],
+                "con_detail_count": [],
+                "sur_detail_count": []}
+    else:
+        df = df[["s_id", "date", "begin_time", "end_time", "instruments", "consumables", "s_name"]]
+        df["instrument_count"] = df.apply(lambda x: len(x["instruments"]), axis=1)
+        df["consumable_count"] = df.apply(lambda x: len(x["consumables"]), axis=1)
+        sur_count, ins_count, con_count = len(df), df["instrument_count"].sum(), df["consumable_count"].sum()
 
-    # get type percentage
-    surgery_type_count = df.groupby("s_name").count()["s_id"].reset_index().rename(columns={"s_name": "name",
-                                                                                            "s_id": "value"})
-    surgery_type_count["value"] = surgery_type_count["value"]
-    df_ins = df.explode("instruments").reset_index(drop=True)[["s_id", "instruments", "instrument_count"]]
-    df_con = df.explode("consumables").reset_index(drop=True)[["s_id", "consumables", "consumable_count"]]
+        # get type percentage
+        surgery_type_count = df.groupby("s_name").count()["s_id"].reset_index().rename(columns={"s_name": "name",
+                                                                                                "s_id": "value"})
+        surgery_type_count["value"] = surgery_type_count["value"]
+        df_ins = df.explode("instruments").reset_index(drop=True)[["s_id", "instruments", "instrument_count"]]
+        df_con = df.explode("consumables").reset_index(drop=True)[["s_id", "consumables", "consumable_count"]]
 
-    def _get_instrument_type(x):
-        x["instruments"] = get_instrument(i_id=x["instruments"]["id"])[0]["i_name"]
-        return x
+        def _get_instrument_type(x):
+            x["instruments"] = get_instrument(i_id=x["instruments"]["id"])[0]["i_name"]
+            return x
 
-    def _get_consumable_type(x):
-        x["consumables"] = get_supply(c_id=x["consumables"])[0]["c_name"]
-        return x
+        def _get_consumable_type(x):
+            x["consumables"] = get_supply(c_id=x["consumables"])[0]["c_name"]
+            return x
 
-    df_ins = df_ins.apply(lambda x: _get_instrument_type(x), axis=1)
-    df_con = df_con.apply(lambda x: _get_consumable_type(x), axis=1)
-    df_ins_count = df_ins.groupby("instruments").count()["s_id"].reset_index().rename(columns={"instruments": "name",
-                                                                                               "s_id": "value"})
-    df_con_count = df_con.groupby("consumables").count()["s_id"].reset_index().rename(columns={"consumables": "name",
-                                                                                               "s_id": "value"})
-    df_ins_count["value"] = df_ins_count["value"]
-    df_con_count["value"] = df_con_count["value"]
+        df_ins = df_ins.apply(lambda x: _get_instrument_type(x), axis=1)
+        df_con = df_con.apply(lambda x: _get_consumable_type(x), axis=1)
+        df_ins_count = df_ins.groupby("instruments").count()["s_id"].reset_index().rename(columns={"instruments": "name",
+                                                                                                   "s_id": "value"})
+        df_con_count = df_con.groupby("consumables").count()["s_id"].reset_index().rename(columns={"consumables": "name",
+                                                                                                   "s_id": "value"})
+        df_ins_count["value"] = df_ins_count["value"]
+        df_con_count["value"] = df_con_count["value"]
 
-    return {"surgery_count": int(sur_count), "instrument_count": int(ins_count), "consumables_count": int(con_count),
-            "ins_detail_count": df_ins_count.to_dict('records'), "con_detail_count": df_con_count.to_dict('records'),
-            "sur_detail_count": surgery_type_count.to_dict('records')}
+        return {"surgery_count": int(sur_count), "instrument_count": int(ins_count), "consumables_count": int(con_count),
+                "ins_detail_count": df_ins_count.to_dict('records'), "con_detail_count": df_con_count.to_dict('records'),
+                "sur_detail_count": surgery_type_count.to_dict('records')}
 
 
 def get_surgery_time_series(surgeon_id: str, mode: str = None):

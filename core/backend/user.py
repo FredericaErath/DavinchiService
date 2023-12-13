@@ -56,9 +56,9 @@ def login(u_id: str, pwd: str):
     try:
         user = get_user(u_id=u_id)[0]
     except IndexError:
-        raise HTTPException(status_code=401, detail="Invalid userid")
+        raise HTTPException(status_code=400, detail="Invalid userid")
     if auth.verify_pwd(pwd, user["code"]) is False:
-        raise HTTPException(status_code=401, detail="Invalid password")
+        raise HTTPException(status_code=400, detail="Invalid password")
     else:
         token = auth.encode_token(user_id=u_id)
         return {"token": token, "user_type": user["user_type"], "name": user["name"], "u_id": user["u_id"]}
