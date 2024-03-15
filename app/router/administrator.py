@@ -12,12 +12,12 @@ from core.backend.instrument import get_all_instrument, revise_instrument, add_i
     add_one_instrument, download_instrument_qr_code, delete_instruments_by_id, get_instrument_general
 from core.backend.supply import get_supply_general, insert_supplies, delete_supply_by_id, update_supply_description
 from core.backend.surgery import get_surgery_by_tds, update_surgery_info, insert_surgery_admin
-from core.backend.user import register, revise_user_info, login, auth
+from app.core.backend.user import register, revise_user_info, auth
 from model.doctor import Message
 from model.instrument import Instrument
 from model.surgery import SurgeryGet, SurgeryUpdate, Contribution
 from model.supply import Supply, SupplyGet, SupplyRevise
-from model.user import User
+from app.model.user import User
 
 router = APIRouter(prefix="/admin")
 

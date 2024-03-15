@@ -56,7 +56,7 @@ def get_surgery_names():
 
     :return: list of surgeries
     """
-    dc_surgery_instrument = json.load(open('F:/DavinciService/core/data/surgery_to_instruments.json', encoding='utf-8'))
+    dc_surgery_instrument = json.load(open('/app/core/data/surgery_to_instruments.json', encoding='utf-8'))
     return list(dc_surgery_instrument.keys())
 
 

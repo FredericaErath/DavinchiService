@@ -3,7 +3,7 @@ Define all the constants here.
 """
 import os.path
 
-BASE_DIR = 'F:/DavinciService/'
+BASE_DIR = '//'
 BASE_CORE_DIR = os.path.join(BASE_DIR, 'core/')
 BASE_DATA_DIR = os.path.join(BASE_CORE_DIR, 'data/')
 BASE_DATA_TEMP_DIR = os.path.join(BASE_DATA_DIR, 'temp/')

@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from typing import Union
 
-from core.database.base import supplies
+from app.core.database.base import supplies
 
 log = logging.getLogger(__name__)
 

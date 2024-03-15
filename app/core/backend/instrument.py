@@ -8,7 +8,7 @@ from constant import INSTRUMENT_COLUMNS, BASE_DATA_TEMP_DIR
 from core.database import get_instrument, update_instrument, delete_instrument, insert_instrument
 import pandas as pd
 
-from core.utils import pack_files
+from app.core.utils import pack_files
 
 
 def get_all_instrument():

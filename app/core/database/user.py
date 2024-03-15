@@ -6,7 +6,7 @@ from typing import Union
 from datetime import datetime
 
 from constant import USER_DICT
-from core.database.base import user
+from app.core.database.base import user
 
 log = logging.getLogger(__name__)
 

@@ -5,8 +5,7 @@ from datetime import datetime
 import logging
 from typing import Union
 
-from constant import DC_DEPARTMENT, LS_PART
-from core.database.base import surgery
+from app.core.database.base import surgery
 
 log = logging.getLogger(__name__)
 

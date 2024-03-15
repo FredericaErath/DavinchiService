@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 from constant import USER_DICT_REVERSE, USER_COLUMNS, STATUS, PRIORITY, STATUS_R, PRIORITY_R
 from core.database import get_user, delete_user, insert_users, USER_DICT
-from core.database.message import get_message, delete_message, update_message
+from app.core.database.message import get_message, delete_message, update_message
 from core.backend.auth import AuthHandler
 
 auth = AuthHandler()

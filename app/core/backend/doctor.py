@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 
 from core.database import get_surgery, get_user, get_instrument, get_supply
-from core.database.message import insert_message, get_message
+from app.core.database.message import insert_message, get_message
 
 
 def get_general_data_by_month(surgeon_id: str, begin_time: datetime = None, end_time: datetime = None):

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from core.backend.user import login, register, auth, revise_user_info
-from model.user import User
+from app.core.backend.user import login, register, auth, revise_user_info
+from app.model.user import User
 
 router = APIRouter()
 

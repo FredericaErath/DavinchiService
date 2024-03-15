@@ -4,8 +4,8 @@ CURD functions for apparatus document
 import logging
 from typing import Union
 from datetime import datetime
-from core.database.base import apparatus
-from core.utils import generate_qrcode_pic
+from app.core.database.base import apparatus
+from app.core.utils import generate_qrcode_pic
 
 log = logging.getLogger(__name__)
 

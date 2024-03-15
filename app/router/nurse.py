@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from core.backend.nurse import insert_surgery_info, get_instrument_ls, get_surgery_names, get_consumable_stock
 from core.backend.surgery import insert_surgery_user
-from core.backend.user import auth
+from app.core.backend.user import auth
 from model.surgery import SurgeryInsert, SurgeryUpdate
 
 router = APIRouter(prefix="/nurse")

@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from constant import PRICE_MAP
 from core.backend.surgery import get_surgery_by_tds
 from core.database import user, surgery, apparatus, supplies
-from core.database.message import get_message
+from app.core.database.message import get_message
 
 
 def get_detail_count(df, name: str):
@@ -198,4 +198,3 @@ def get_general_data():
     return {"users": str(users), "surgery": str(surgeries), "instrument": str(instrument),
             "consumable": str(consumable), "cost": sum_all, "message": message,
             "unhandled_message": unhandled_message}
-

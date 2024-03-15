@@ -3,7 +3,7 @@ base function connect Davinci database
 """
 from pymongo import MongoClient
 
-client = MongoClient(host='127.0.0.1', port=27017)
+client = MongoClient(host='47.242.250.68', port=27017)
 davinci_db = client.DaVinchi
 surgery = davinci_db.surgery
 user = davinci_db.user

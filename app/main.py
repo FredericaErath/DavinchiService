@@ -20,6 +20,3 @@ app.include_router(nurse.router, prefix="")
 app.include_router(doctor.router, prefix="")
 app.include_router(administrator.router, prefix="")
 
-if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run(app='main:app', host="192.168.1.4", port=9001, reload=True)

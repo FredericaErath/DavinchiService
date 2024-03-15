@@ -1,6 +1,4 @@
-import pandas as pd
-
-from core.database.base import davinci_db
+from app.core.database.base import davinci_db
 
 
 def get_collection_cols(collection: str):
