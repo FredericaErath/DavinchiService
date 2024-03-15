@@ -1,12 +1,6 @@
 # 引入python版本
 FROM python:3.10.1
 
-# 设置时间
-RUN ln -sf /usr/share/zoneinfo/Asia/Beijing/etc/localtime
-
-# 输出时间
-RUN echo 'Asia/Beijing' >/etc/timezone
-
 # 设置工作目录
 WORKDIR /code
 
