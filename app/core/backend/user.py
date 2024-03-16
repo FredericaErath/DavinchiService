@@ -5,9 +5,9 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from constant import USER_DICT
-from core.database import update_user, get_user, insert_user
-from core.backend.auth import AuthHandler
+from app.constant import USER_DICT
+from app.core.database import update_user, get_user, insert_user
+from app.core.backend.auth import AuthHandler
 
 auth = AuthHandler()
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 
-from core.backend.doctor import get_general_data_by_month, get_surgery_time_series, get_contribution_matrix, \
+from app.core.backend.doctor import get_general_data_by_month, get_surgery_time_series, get_contribution_matrix, \
     get_surgery_by_date, send_message, get_message_by_uid
 from app.core.backend.user import auth
-from model.doctor import Doctor
+from app.model.doctor import Doctor
 
 router = APIRouter(prefix="/doctor")
 

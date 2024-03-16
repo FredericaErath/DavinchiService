@@ -8,7 +8,7 @@ import zipfile
 
 import qrcode
 
-from constant import BASE_DIR, BASE_DATA_TEMP_DIR
+from app.constant import BASE_DIR, BASE_DATA_TEMP_DIR
 
 log = logging.getLogger(__name__)
 

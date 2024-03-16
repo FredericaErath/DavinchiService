@@ -7,10 +7,10 @@ from typing import Union
 import pandas as pd
 from fastapi import HTTPException
 
-from constant import USER_DICT_REVERSE, USER_COLUMNS, STATUS, PRIORITY, STATUS_R, PRIORITY_R
-from core.database import get_user, delete_user, insert_users, USER_DICT
+from app.constant import USER_DICT_REVERSE, USER_COLUMNS, STATUS, PRIORITY, STATUS_R, PRIORITY_R
+from app.core.database import get_user, delete_user, insert_users, USER_DICT
 from app.core.database.message import get_message, delete_message, update_message
-from core.backend.auth import AuthHandler
+from app.core.backend.auth import AuthHandler
 
 auth = AuthHandler()
 

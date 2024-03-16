@@ -6,7 +6,7 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 
-from core.database import get_surgery, get_user, get_instrument, get_supply
+from app.core.database import get_surgery, get_user, get_instrument, get_supply
 from app.core.database.message import insert_message, get_message
 
 

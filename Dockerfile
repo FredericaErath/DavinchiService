@@ -8,7 +8,7 @@ WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 
 # 禁用缓存并批量安装包(后面的链接是利用豆瓣源安装，速度会加快)
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt -i https://pypi.douban.com/simple/
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 # 复制代码到工作目录
 COPY ./app /code/app
