@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 # 复制代码到工作目录
 COPY ./app /code/app
 
+ENV JWT_SECRET_KEY SECRET
+
 # 放开端口
 EXPOSE 9001
 
